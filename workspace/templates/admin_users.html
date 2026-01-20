@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ユーザー管理 - 管理者コンソール</title>
+    <link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    
+    <style>
+        /* 基本スタイル */
+        * { box-sizing: border-box; }
+        body {
+            font-family: "BIZ UDPGothic", "Noto Sans JP", sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .common-header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .header-title a { font-size: 1.5em; font-weight: bold; color: white; text-decoration: none; display: flex; align-items: center; gap: 10px; }
+        .header-nav a { color: white; text-decoration: none; background: #3498db; padding: 8px 20px; border-radius: 5px; font-weight: bold; }
+        
+        main {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+            flex-grow: 1;
+            width: 100%;
+        }
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            text-decoration: none;
+            color: #555;
+            font-weight: bold;
+            margin-bottom: 20px;
+            padding: 8px 12px;
+            border-radius: 5px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            transition: 0.2s;
+        }
+        .back-link:hover { background-color: #e8e8e8; color: #333; }
+        .page-title {
+            font-size: 1.8em;
+            color: #2c3e50;
+            border-left: 6px solid #3498db;
+            padding-left: 15px;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        /* テーブルスタイル */
+        .user-table-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            overflow: hidden;
+            border: 1px solid #ddd;
+        }
+        .user-table { width: 100%; border-collapse: collapse; }
+        .user-table th {
+            background: #f8f9fa; padding: 15px 20px; text-align: left;
+            border-bottom: 2px solid #e0e0e0; color: #555; font-weight: bold; white-space: nowrap;
+        }
+        .user-table td { padding: 15px 20px; border-bottom: 1px solid #eee; vertical-align: middle; }
+        .user-table tr:hover { background: #fbfbfb; }
+
+        /* バッジ */
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.85em; font-weight: bold; white-space: nowrap; }
+        .badge-admin { background: #e3f2fd; color: #1565c0; border: 1px solid #90caf9; }
+        .badge-user { background: #f5f5f5; color: #616161; border: 1px solid #e0e0e0; }
+        .badge-active { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+        .badge-frozen { background: #ffebee; color: #c62828; border: 1px solid #ef9a9a; }
+
+        /* ボタン */
+        .action-buttons { display: flex; gap: 8px; justify-content: flex-end; }
+        .action-btn {
+            border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;
+            font-weight: bold; font-size: 0.9em; display: inline-flex; align-items: center;
+            gap: 4px; transition: 0.2s; color: white;
+        }
+        .btn-freeze { background: #ff9800; }
+        .btn-freeze:hover { background: #f57c00; }
+        .btn-unfreeze { background: #4caf50; }
+        .btn-unfreeze:hover { background: #388e3c; }
+        .btn-delete { background: #f44336; }
+        .btn-delete:hover { background: #d32f2f; }
+
+        .user-name { font-size: 1.05em; font-weight: bold; color: #2c3e50; }
+        .user-id { font-size: 0.8em; color: #888; display: block; margin-top: 2px; }
+        footer { text-align: center; padding: 30px; color: #777; border-top: 1px solid #ddd; background: #fff; margin-top: auto; }
+        
+        .message-area { margin-bottom: 20px; padding: 15px; border-radius: 5px; font-weight: bold; display: none; }
+        .message-success { background: #dff0d8; color: #3c763d; border: 1px solid #d6e9c6; }
+        .message-error { background: #f2dede; color: #a94442; border: 1px solid #ebccd1; }
+
+        @media (max-width: 768px) {
+            .user-table th:nth-child(2), .user-table td:nth-child(2),
+            .user-table th:nth-child(5), .user-table td:nth-child(5) { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <header class="common-header">
+        <div class="header-title">
+            <a href="/top"><span class="material-icons-round">security</span> 根本原因から学ぶWebセキュリティ</a>
+        </div>
+        <nav class="header-nav">
+            <a href="/admin_dashboard">ダッシュボードに戻る</a>
+        </nav>
+    </header>
+
+    <main>
+        <a href="/admin_dashboard" class="back-link">
+            <span class="material-icons-round">arrow_back</span> ダッシュボードへ
+        </a>
+        <div id="message-area" class="message-area"></div>
+        <h1 class="page-title"><span class="material-icons-round">manage_accounts</span> ユーザー管理一覧</h1>
+        <div class="user-table-card">
+            <table class="user-table">
+                <thead>
+                    <tr>
+                        <th>表示名 / ID</th>
+                        <th>メールアドレス</th>
+                        <th>権限</th>
+                        <th>ステータス</th>
+                        <th>登録日</th>
+                        <th style="text-align: right;">操作</th>
+                    </tr>
+                </thead>
+                <tbody id="user-list-body">
+                    <tr><td colspan="6" style="text-align: center; padding: 30px;">ユーザー情報を読み込み中...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 セキュリティ学習ポータル | <a href="/contact">お問い合わせ</a></p></p>
+    </footer>
+
+    <script>
+        // ★重要: auth.pyに合わせて access_token を使用
+        const token = localStorage.getItem('access_token');
+        const messageArea = document.getElementById('message-area');
+        
+        function showMessage(msg, type) {
+            messageArea.textContent = msg;
+            messageArea.className = `message-area ${type === 'success' ? 'message-success' : 'message-error'}`;
+            messageArea.style.display = 'block';
+            window.scrollTo(0, 0);
+            setTimeout(() => { messageArea.style.display = 'none'; }, 3000);
+        }
+
+        if (!token) {
+            alert('管理者権限が必要です。');
+            window.location.href = '/login';
+        }
+
+        function loadUsers() {
+            fetch('/api/admin/users', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            .then(res => {
+                if (res.status === 401 || res.status === 403) {
+                    throw new Error('権限がありません。ログインし直してください。');
+                }
+                return res.json();
+            })
+            .then(result => {
+                const tbody = document.getElementById('user-list-body');
+                tbody.innerHTML = '';
+
+                if (result.success && result.data.length > 0) {
+                    result.data.forEach(user => {
+                        const tr = document.createElement('tr');
+                        const statusBadge = user.is_deleted 
+                            ? '<span class="badge badge-frozen">凍結中</span>' 
+                            : '<span class="badge badge-active">有効</span>';
+                        const roleBadge = user.role === 'ADMIN'
+                            ? '<span class="badge badge-admin">ADMIN</span>'
+                            : '<span class="badge badge-user">USER</span>';
+
+                        let buttons = '';
+                        if (user.is_deleted) {
+                            buttons += `<button class="action-btn btn-unfreeze" onclick="toggleFreeze('${user.user_id}', '${escapeHtml(user.user_name)}', false)">
+                                <span class="material-icons-round" style="font-size:16px;">lock_open</span> 解除
+                            </button>`;
+                        } else {
+                            buttons += `<button class="action-btn btn-freeze" onclick="toggleFreeze('${user.user_id}', '${escapeHtml(user.user_name)}', true)">
+                                <span class="material-icons-round" style="font-size:16px;">lock</span> 凍結
+                            </button>`;
+                        }
+                        buttons += `<button class="action-btn btn-delete" onclick="deleteUser('${user.user_id}', '${escapeHtml(user.user_name)}')">
+                            <span class="material-icons-round" style="font-size:16px;">delete</span> 削除
+                        </button>`;
+
+                        tr.innerHTML = `
+                            <td>
+                                <div class="user-name">${escapeHtml(user.user_name)}</div>
+                                <span class="user-id">${user.user_id}</span>
+                            </td>
+                            <td>${escapeHtml(user.email)}</td>
+                            <td>${roleBadge}</td>
+                            <td>${statusBadge}</td>
+                            <td>${user.created_at}</td>
+                            <td style="text-align: right;">
+                                <div class="action-buttons">${buttons}</div>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 30px; color: #777;">登録されているユーザーが見つかりません。</td></tr>';
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                showMessage(err.message, 'error');
+            });
+        }
+
+        window.toggleFreeze = function(userId, userName, toFreeze) {
+            const action = toFreeze ? "凍結" : "凍結解除";
+            if (!confirm(`ユーザー「${userName}」を${action}しますか？\n${toFreeze ? '※凍結されたユーザーはログインできなくなります。' : '※ログイン可能になります。'}`)) return;
+
+            fetch(`/api/admin/users/${userId}/toggle_freeze`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.success) {
+                    showMessage(res.message, 'success');
+                    loadUsers();
+                } else {
+                    showMessage('エラー: ' + res.message, 'error');
+                }
+            })
+            .catch(err => showMessage('通信エラーが発生しました。', 'error'));
+        };
+
+        window.deleteUser = function(userId, userName) {
+            if (!confirm(`【警告】ユーザー「${userName}」を完全に削除しますか？\nこの操作は取り消せません。関連する学習データもすべて削除されます。`)) return;
+
+            fetch(`/api/admin/users/${userId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.success) {
+                    showMessage(res.message, 'success');
+                    loadUsers();
+                } else {
+                    showMessage('エラー: ' + res.message, 'error');
+                }
+            })
+            .catch(err => showMessage('通信エラーが発生しました。', 'error'));
+        };
+
+        function escapeHtml(unsafe) {
+            if (typeof unsafe !== 'string') return unsafe;
+            return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        loadUsers();
+    </script>
+</body>
+</html>

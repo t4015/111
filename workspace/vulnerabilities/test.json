@@ -1,0 +1,16 @@
+[
+    {
+      "vuln_name": "オープンリダイレクト",
+      "video_url": "Q2-08e1y5Bw",
+      "description": "パラメータで指定されたURLに検証なしでリダイレクトすることで、フィッシングサイトなどへユーザーを誘導できてしまう脆弱性です。",
+      "vulnerable_code": "# 外部入力をそのままリダイレクト先に指定\nurl = request.args.get('next')\nreturn redirect(url)",
+      "fixed_code": "from urllib.parse import urlparse, urljoin\n\nurl = request.args.get('next')\n# ドメインが自サイト内かチェックする\ntarget_loc = urlparse(url).netloc\nif target_loc == '' or target_loc == request.host:\n    return redirect(url)\nelse:\n    return redirect('/')"
+    },
+    {
+      "vuln_name": "安全でないデシリアライゼーション",
+      "video_url": "ciNHn38EyRc",
+      "description": "信頼できないデータをオブジェクトとして復元（デシリアライズ）する際に、悪意のあるコードを実行されてしまう脆弱性です。",
+      "vulnerable_code": "import pickle\n\n# ユーザーからの入力をそのまま復元\ndata = request.cookies.get('user_data')\nuser_obj = pickle.loads(base64.b64decode(data))",
+      "fixed_code": "import json\n\n# 安全なデータ形式（JSONなど）を使用する\ndata = request.cookies.get('user_data')\nuser_obj = json.loads(base64.b64decode(data))"
+    }
+  ]

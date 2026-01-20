@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【実験用】Webセキュリティ学習 - デザイン比較</title>
+    <link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+
+    <style>
+        /* =========================================
+           ベース設定 & CSS変数定義
+           ========================================= */
+        :root {
+            --transition-speed: 0.3s;
+        }
+
+        /* 共通のリセットCSS */
+        body {
+            font-family: "BIZ UDPGothic", "Noto Sans JP", sans-serif;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            transition: background-color var(--transition-speed), color var(--transition-speed);
+        }
+
+        a { text-decoration: none; transition: var(--transition-speed); }
+        ul { list-style: none; padding: 0; }
+
+        /* --- 【パターンA】: シンプル・信頼感・ライトテーマ --- */
+        body.style-a {
+            --bg-color: #f9fafb;
+            --text-main: #333333;
+            --text-sub: #555555;
+            --primary: #0056b3;       /* 落ち着いた青 */
+            --accent: #d32f2f;
+            --card-bg: #ffffff;
+            --card-border: 1px solid #e5e7eb;
+            --card-radius: 8px;
+            --card-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            --hero-bg: #ffffff;
+            --hero-text: #333333;
+            --hero-border: 1px solid #e5e7eb;
+        }
+
+        /* --- 【パターンB】: モダン・没入感・ダークヒーロー --- */
+        body.style-b {
+            --bg-color: #f0f2f5;
+            --text-main: #2c3e50;
+            --text-sub: #7f8c8d;
+            --primary: #2980b9;       /* 明るめの青 */
+            --accent: #e67e22;        /* オレンジアクセント */
+            --card-bg: #ffffff;
+            --card-border: none;
+            --card-radius: 16px;      /* 丸みを強く */
+            --card-shadow: 0 10px 20px rgba(0,0,0,0.08); /* 強い影 */
+            --hero-bg: linear-gradient(135deg, #2c3e50 0%, #34495e 100%); /* ダークグラデーション */
+            --hero-text: #ffffff;
+            --hero-border: none;
+        }
+
+        /* 背景色の適用 */
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+        }
+
+        /* =========================================
+           レイアウトスタイル
+           ========================================= */
+        
+        .main-wrapper {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* ヒーローセクション（ファーストビュー） */
+        .hero-section {
+            background: var(--hero-bg);
+            color: var(--hero-text);
+            padding: 60px 20px;
+            text-align: center;
+            border-bottom: var(--hero-border);
+            margin-bottom: 40px;
+            transition: all var(--transition-speed);
+        }
+
+        /* パターンBの時だけヒーローに丸みをつける */
+        body.style-b .hero-section {
+            border-radius: 0 0 30px 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .hero-title {
+            font-size: 2.2rem;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        .hero-title span {
+            color: var(--primary);
+        }
+        /* パターンBの時はタイトル強調色を黄色系に */
+        body.style-b .hero-title span {
+            color: #f1c40f;
+        }
+
+        .hero-text {
+            font-size: 1rem;
+            max-width: 700px;
+            margin: 0 auto;
+            opacity: 0.9;
+        }
+
+        /* コンテンツエリア */
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-main);
+            border-left: 5px solid var(--primary);
+            padding-left: 15px;
+        }
+
+        .vulnerability-list {
+            display: grid;
+            /* レスポンシブグリッド */
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        /* カードデザイン */
+        .content-card {
+            background: var(--card-bg);
+            border: var(--card-border);
+            border-radius: var(--card-radius);
+            box-shadow: var(--card-shadow);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            position: relative;
+            height: 100%;
+            box-sizing: border-box;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .content-card:hover {
+            transform: translateY(-5px);
+            /* パターンAは枠線色変化、パターンBは影強調 */
+            border-color: var(--primary); 
+        }
+        body.style-b .content-card:hover {
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        }
+
+        .card-top {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background-color: #f0f4f8; /* 薄いグレー */
+            color: var(--text-sub);
+            transition: var(--transition-speed);
+        }
+        
+        /* パターンBはアイコンを目立たせる */
+        body.style-b .card-icon {
+            background-color: rgba(52, 152, 219, 0.1);
+            color: var(--primary);
+        }
+
+        .chapter-label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-sub);
+            display: block;
+        }
+
+        .card-title {
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .card-arrow {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            color: #ccc;
+        }
+        body.style-b .card-arrow {
+            color: var(--accent);
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            margin-top: 60px;
+            background-color: var(--card-bg);
+            border-top: 1px solid var(--color-border);
+            color: var(--text-sub);
+        }
+
+        /* =========================================
+           実験用切り替えパネル (画面右下に固定)
+           ========================================= */
+        .experiment-panel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            z-index: 9999;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+        .experiment-panel h3 {
+            margin: 0 0 10px 0;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        .toggle-btn {
+            background: #fff;
+            border: none;
+            padding: 8px 16px;
+            margin: 0 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        .toggle-btn:hover { background: #eee; }
+        .toggle-btn.active {
+            background: #f1c40f; /* アクティブなボタンの色 */
+            color: #000;
+        }
+
+    </style>
+</head>
+
+<body class="style-a" id="targetBody">
+
+    <header class="ud-header" style="background:var(--card-bg); border-bottom:1px solid #eee; padding:15px 20px; display:flex; justify-content:space-between; align-items:center;">
+        <div class="site-logo">
+            <a href="/">
+                <span class="material-icons-round icon" aria-hidden="true">security</span>
+                <span>根本原因から学ぶWebセキュリティ</span>
+            </a>
+        </div>
+        
+    </header>
+
+    <div class="hero-section">
+        <div class="main-wrapper">
+            <h1 class="hero-title">
+                Webセキュリティの<br><span>「根本原因」</span>を学ぶ
+            </h1>
+            <p class="hero-text">
+                現象ごとの対処療法ではなく、脆弱性が生まれる構造的な原因を理解し、<br>
+                安全なWebアプリケーションを設計・実装する力を身につけましょう。
+            </p>
+        </div>
+    </div>
+
+    <main class="main-wrapper">
+        <h2 class="section-title">
+            <span class="material-icons-round" style="color:var(--primary);">school</span>
+            学習コース一覧
+        </h2>
+        
+        <ul class="vulnerability-list" id="vulnList">
+            <li class="status-message" style="text-align:center; padding:40px; color:var(--text-sub);">
+                読み込み中...
+            </li>
+        </ul>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 セキュリティ学習ポータル</p>
+    </footer>
+
+    <div class="experiment-panel">
+        <h3>デザイン切り替え</h3>
+        <button class="toggle-btn active" onclick="setPattern('A')" id="btnA">パターンA<br><small>(シンプル)</small></button>
+        <button class="toggle-btn" onclick="setPattern('B')" id="btnB">パターンB<br><small>(モダン)</small></button>
+    </div>
+
+    <script>
+        // --- 1. デザイン切り替えロジック ---
+        function setPattern(type) {
+            const body = document.getElementById('targetBody');
+            const btnA = document.getElementById('btnA');
+            const btnB = document.getElementById('btnB');
+
+            // クラスをリセットして付与
+            body.classList.remove('style-a', 'style-b');
+            
+            if (type === 'A') {
+                body.classList.add('style-a');
+                btnA.classList.add('active');
+                btnB.classList.remove('active');
+            } else {
+                body.classList.add('style-b');
+                btnA.classList.remove('active');
+                btnB.classList.add('active');
+            }
+        }
+
+        // --- 2. データ取得 & 表示ロジック (既存コードを流用) ---
+        function escapeHtml(unsafe) {
+            if (typeof unsafe !== 'string') return unsafe;
+            return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            fetch('/api/vulnerabilities')
+                .then(res => {
+                    if (!res.ok) throw new Error('API Error');
+                    return res.json();
+                })
+                .then(json => {
+                    const container = document.getElementById('vulnList');
+                    container.innerHTML = "";
+
+                    let allItems = [];
+                    if (json.success && json.data) {
+                        allItems = json.data.map(v => ({...v, url: `/lesson/${v.vuln_id}`}));
+                    }
+
+                    if (allItems.length === 0) {
+                        // データがない場合のダミーデータ（デザイン確認用）
+                        allItems = [
+                            {vuln_name: "SQLインジェクション入門", vuln_id: 1, url: "#"},
+                            {vuln_name: "クロスサイトスクリプティング(XSS)", vuln_id: 2, url: "#"},
+                            {vuln_name: "CSRFの仕組みと対策", vuln_id: 3, url: "#"},
+                            {vuln_name: "OSコマンドインジェクション", vuln_id: 4, url: "#"},
+                            {vuln_name: "ディレクトリトラバーサル", vuln_id: 5, url: "#"},
+                            {vuln_name: "認証不備とセッション管理", vuln_id: 6, url: "#"},
+                        ];
+                    }
+
+                    allItems.forEach((v, index) => {
+                        const li = document.createElement('li');
+                        li.className = 'vulnerability-item';
+                        
+                        let iconName = 'lock_open';
+                        if((v.vuln_name || "").includes('SQL')) iconName = 'storage';
+                        if((v.vuln_name || "").includes('XSS')) iconName = 'code';
+                        if((v.vuln_name || "").includes('Command')) iconName = 'terminal';
+
+                        const a = document.createElement('a');
+                        a.href = v.url;
+                        a.className = 'content-card';
+                        
+                        a.innerHTML = `
+                            <div class="card-top">
+                                <div class="card-icon">
+                                    <span class="material-icons-round">${iconName}</span>
+                                </div>
+                                <div>
+                                    <span class="chapter-label">Chapter ${index + 1}</span>
+                                    <h3 class="card-title">${escapeHtml(v.vuln_name)}</h3>
+                                </div>
+                            </div>
+                            <div style="font-size:0.9rem; color:var(--text-sub); margin-bottom:10px;">
+                                脆弱性の根本原因を理解し、セキュアなコードを書くための実践的な演習を行います。
+                            </div>
+                            <span class="material-icons-round card-arrow">arrow_forward</span>
+                        `;
+                        
+                        li.appendChild(a);
+                        container.appendChild(li);
+                    });
+                })
+                .catch(err => {
+                    console.error(err);
+                    document.getElementById('vulnList').innerHTML = '<li style="text-align:center;">（API接続エラー: デザイン確認モード）</li>';
+                });
+        });
+    </script>
+
+</body>
+</html>

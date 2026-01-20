@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ログイン - 根本原因から学ぶWebセキュリティ</title>
+
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+
+</head>
+<body>
+
+    {% include "components/header.html" %}
+
+    <div class="login-container">
+        
+        <form id="login-form">
+            <h1 class="login-title">ログイン</h1>
+
+            <div id="error-message" class="error-message"></div>
+            
+            <div class="form-group">
+                <label for="email">メールアドレス</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">パスワード</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+
+            <div class="form-group">
+                <label for="otp_code">認証コード (6桁)</label>
+                <input type="text" id="otp_code" name="otp_code" inputmode="numeric" pattern="\d{6}" maxlength="6" required>
+            </div>
+
+            <div class="turnstile-container">
+                <div class="cf-turnstile" data-sitekey="0x4AAAAAAB_WsRju7r8LDFGh"></div>
+            </div>
+            
+            <button type="submit" class="login-button" id="login-button">ログイン</button>
+
+            <div class="form-links">
+                <a href="/register">アカウントをお持ちでない場合はこちら</a>
+                <a href="/forgot_password">パスワードをお忘れの場合はこちら</a>
+            </div>
+        </form>
+        
+        <div class="extra-link">
+            <a href="/">
+                &larr; トップページに戻る
+            </a>
+        </div>
+        
+    </div>
+
+    <script>
+            document.getElementById('login-form').addEventListener('submit', function (event) {
+                event.preventDefault();
+
+                const errorMessage = document.getElementById('error-message');
+                const loginButton = document.getElementById('login-button');
+
+                errorMessage.style.display = 'none';
+                loginButton.disabled = true;
+                loginButton.textContent = '認証中...';
+
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                const otp = document.getElementById('otp_code').value;
+
+                // Turnstileトークン取得
+                const turnstileToken = turnstile.getResponse();
+                if (!turnstileToken) {
+                    errorMessage.textContent = '「私はロボットではありません」にチェックを入れてください。';
+                    errorMessage.style.display = 'block';
+                    loginButton.disabled = false;
+                    loginButton.textContent = 'ログイン';
+                    return;
+                }
+
+                const payload = {
+                    email: email,
+                    password: password,
+                    otp_code: otp,
+                    'cf-turnstile-response': turnstileToken
+                };
+
+                // 相対パスを使用 (B案)
+                fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // トークン名は access_token で統一 (B案)
+                            localStorage.setItem('access_token', data.access_token);
+                            window.location.href = '/mypage';
+                        } else {
+                            errorMessage.textContent = data.message || 'ログインに失敗しました。';
+                            errorMessage.style.display = 'block';
+                            loginButton.disabled = false;
+                            loginButton.textContent = 'ログイン';
+                            turnstile.reset();
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        errorMessage.textContent = 'サーバーとの通信に失敗しました。';
+                        errorMessage.style.display = 'block';
+                        loginButton.disabled = false;
+                        loginButton.textContent = 'ログイン';
+                    });
+            });
+    </script>
+
+</body>
+</html>

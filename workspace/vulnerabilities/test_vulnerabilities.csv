@@ -1,0 +1,19 @@
+vuln_name,video_url,description,vulnerable_code,fixed_code
+"ディレクトリトラバーサル","dQw4w9WgXcQ","ユーザーが入力したファイル名を検証せずに開くことで、意図しないサーバー内のファイル（/etc/passwdなど）が閲覧されてしまう脆弱性です。","filename = request.args.get('filename')
+# 入力値をそのままパスとして結合している
+with open('/var/www/html/' + filename, 'r') as f:
+    data = f.read()","from werkzeug.utils import secure_filename
+
+filename = request.args.get('filename')
+# ファイル名から危険な文字を除去する
+safe_name = secure_filename(filename)
+with open('/var/www/html/' + safe_name, 'r') as f:
+    data = f.read()"
+"CSRF (クロスサイトリクエストフォージェリ)","EoaDgUgS6QA","ユーザーが意図しない操作（送金やパスワード変更など）を、攻撃者が用意した罠サイト経由で強制的​​に行わせる攻撃です。","<form action=""/transfer"" method=""POST"">
+  <input type=""text"" name=""amount"">
+  <input type=""submit"" value=""送金"">
+</form>","<form action=""/transfer"" method=""POST"">
+  <input type=""hidden"" name=""csrf_token"" value=""{{ csrf_token() }}"">
+  <input type=""text"" name=""amount"">
+  <input type=""submit"" value=""送金"">
+</form>"

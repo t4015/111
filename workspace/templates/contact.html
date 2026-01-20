@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>お問い合わせ | 根本原因から学ぶWebセキュリティ</title>
+    <link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+
+</head>
+<body>
+
+    {% include "components/header.html" %}
+
+    <main class="main-content">
+        <section class="contact-form-section">
+            <h2>お問い合わせ</h2>
+
+            <div id="auth-required-message" class="message-box error" style="display: none;">
+                お問い合わせにはユーザー認証が必要です。こちらから<a href="/login">ログイン</a>してから再度アクセスしてください。
+            </div>
+
+            <div id="contact-form-container" style="display: none;">
+                <p class="page-description">
+                    ご不明な点、ご意見、ご要望がございましたら、以下のフォームからお問い合わせください。
+                </p>
+                <form id="inquiry-form" class="form-container">
+                    <div id="status-message" class="message-box" style="display: none;"></div>
+
+                    <div class="form-group">
+                        <label for="subject">件名</label>
+                        <input type="text" id="subject" name="subject" required maxlength="255">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="message">内容</label>
+                        <textarea id="message" name="message" rows="8" required></textarea>
+                    </div>
+
+                    <button type="submit" id="submit-button" class="button primary-button">送信する</button>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 NCS 卒業研究プロジェクト</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const authRequiredMessage = document.getElementById('auth-required-message');
+            const contactFormContainer = document.getElementById('contact-form-container');
+            const form = document.getElementById('inquiry-form');
+            const submitButton = document.getElementById('submit-button');
+            const statusMessage = document.getElementById('status-message');
+
+            function checkAuthentication() {
+                // トークン名は access_token で統一 (B案)
+                const token = localStorage.getItem('access_token');
+
+                if (token) {
+                    authRequiredMessage.style.display = 'none';
+                    contactFormContainer.style.display = 'block';
+                    return token;
+                } else {
+                    authRequiredMessage.style.display = 'block';
+                    contactFormContainer.style.display = 'none';
+                    return null;
+                }
+            }
+
+            checkAuthentication();
+
+            form.addEventListener('submit', async function(event) {
+                event.preventDefault();
+
+                const token = localStorage.getItem('access_token'); // トークン名統一
+
+                if (!token) {
+                    authRequiredMessage.style.display = 'block';
+                    contactFormContainer.style.display = 'none';
+                    statusMessage.textContent = '認証トークンが見つかりません。再度ログインしてください。';
+                    statusMessage.className = 'message-box error';
+                    statusMessage.style.display = 'block';
+                    return;
+                }
+
+                const data = {
+                    subject: form.subject.value,
+                    message: form.message.value
+                };
+
+                statusMessage.style.display = 'none';
+                submitButton.disabled = true;
+                submitButton.textContent = '送信中...';
+
+                try {
+                    const response = await fetch('/api/inquiry', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify(data)
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        statusMessage.textContent = result.message || 'お問い合わせを受け付けました。';
+                        statusMessage.className = 'message-box success';
+                        form.reset();
+                    } else {
+                        let result = {};
+                        try { result = await response.json(); } catch (e) {}
+
+                        if (response.status === 401) {
+                            authRequiredMessage.style.display = 'block';
+                            contactFormContainer.style.display = 'none';
+                            statusMessage.textContent = '認証に失敗しました。再度ログインしてください。';
+                        } else {
+                            statusMessage.textContent = result.error || `送信に失敗しました (ステータス: ${response.status})。`;
+                        }
+                        statusMessage.className = 'message-box error';
+                    }
+                } catch (err) {
+                    statusMessage.textContent = '通信エラーが発生しました。接続を確認してください。';
+                    statusMessage.className = 'message-box error';
+                }
+
+                statusMessage.style.display = 'block';
+                submitButton.disabled = false;
+                submitButton.textContent = '送信する';
+            });
+        });
+    </script>
+</body>
+</html>

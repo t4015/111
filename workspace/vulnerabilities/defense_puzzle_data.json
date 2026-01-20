@@ -1,0 +1,5 @@
+[
+    { "type": "text", "value": "$stmt = $pdo->" },
+    { "type": "input", "correct": "prepare", "placeholder": "メソッド名" },
+    { "type": "text", "value": "(\"SELECT * FROM users WHERE id = ?\");" }
+  ]

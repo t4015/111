@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>利用規約 - 根本原因から学ぶWebセキュリティ</title>
+  <link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
+
+</head>
+
+<body>
+
+  {% include "components/header.html" %}
+
+<main>
+
+  <h1>利用規約</h1>
+
+  <p>
+    本利用規約（以下「本規約」）は、[サイト運営者名]（以下「当方」）が提供する
+    「攻撃者視点学習支援 Webシステム」（以下「本サービス」）の利用条件を定めるものです。
+    利用者は、本規約に同意した上で本サービスを利用するものとします。
+  </p>
+
+  <h2>第1条（本サービスの内容と目的）</h2>
+  <p>
+    本サービスは、Webアプリケーションの脆弱性について、攻撃者の視点を取り入れた
+    学習コンテンツを提供する教育サービスです。本サービスの目的は、利用者が脆弱性の
+    仕組みを深く理解し、より安全な開発手法を習得することを支援することです。
+  </p>
+
+  <h2>第2条（利用環境）</h2>
+  <p>
+    本サービスは PC（Windows / Mac）での利用を前提としています。
+    スマートフォンやタブレット端末での動作は保証していません。
+  </p>
+
+  <h2>第3条（アカウント登録）</h2>
+  <p>
+    ・アカウント登録なしでも本サービスのコンテンツを利用できます。<br>
+    ・アカウント登録を行うと、学習進捗が保存され、マイページで履歴を確認できます。<br>
+    ・未登録で利用した場合、学習履歴は保存されません。<br>
+    ・利用者は自身のアカウント情報（ID・パスワード）を適切に管理する責任を負います。
+  </p>
+
+  <h2>第4条（禁止事項）</h2>
+  <p>利用者は、本サービスの利用にあたり、以下の行為を行ってはなりません。</p>
+  <ul>
+    <li>本サービスで得た知識（攻撃手法等）を第三者システムに対し無断で試す・攻撃する行為</li>
+    <li>サーバーやネットワークに過度な負荷を与える行為（DoS攻撃など）</li>
+    <li>脆弱性を意図的に探索・攻撃する行為</li>
+    <li>他人のアカウントを使用する行為、または自身のアカウントの貸与・譲渡</li>
+    <li>コンテンツ（動画・テキスト等）の無断複製・転載・再配布</li>
+    <li>法令または公序良俗に違反する行為</li>
+  </ul>
+
+  <h2>第5条（免責事項）</h2>
+  <ul>
+    <li>当方は、サービス内容を予告なく変更・中断・終了することがあります。</li>
+    <li>提供されるコンテンツの正確性・完全性・最新性を保証しません。</li>
+    <li>利用または利用不能によって発生した損害について責任を負いません。</li>
+    <li>万全を期していますが、絶対的な安全を保証するものではありません。</li>
+  </ul>
+
+  <h2>第6条（外部サービスの利用）</h2>
+  <p>
+    本サービスでは YouTube などの第三者サービスを利用しています。
+    各サービスの利用規約が適用されます。
+  </p>
+
+  <h2>第7条（本規約の変更）</h2>
+  <p>
+    当方は、必要と判断した場合、予告なく本規約を変更できます。
+    変更後の規約は、本サービス上に掲載された時点で効力を生じます。
+  </p>
+
+  <h2>第8条（準拠法および管轄裁判所）</h2>
+  <p>
+    本規約は日本法に準拠します。本サービスに関する紛争が生じた場合、
+    名古屋地方裁判所を第一審の専属的合意管轄裁判所とします。
+  </p>
+
+</main>
+
+<footer>
+  <p>&copy; 2025 セキュリティ学習ポータル | <a href="/contact">お問い合わせ</a></p></p>
+</footer>
+
+<script>
+(function() {
+    function checkLoginStatus() {
+        const token = localStorage.getItem('access_token');
+        return { loggedIn: !!token };
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const authButton = document.getElementById('auth-button');
+        if (!authButton) return;
+        const status = checkLoginStatus();
+
+        if (status.loggedIn) {
+            authButton.textContent = 'マイページ';
+            authButton.href = '/mypage';
+        } else {
+            authButton.textContent = 'ログイン';
+            authButton.href = '/login';
+        }
+    });
+})();
+</script>
+
+</body>
+</html>
