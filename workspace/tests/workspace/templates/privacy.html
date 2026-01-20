@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>プライバシーポリシー | 根本原因から学ぶWebセキュリティ</title>
+    <link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+
+</head>
+<body>
+
+    {% include "components/header.html" %}
+
+<main>
+    <h1>プライバシーポリシー</h1>
+
+    <p>
+    名古屋情報メディア専門学校 卒業研究 S02 グループ（以下「当グループ」といいます）は、当グループが提供する「攻撃者視点学習支援 Webシステム」（以下「本サービス」といいます）における、利用者（以下「ユーザー」といいます）の個人情報の取り扱いについて、以下の通りプライバシーポリシー（以下「本ポリシー」といいます）を定めます。
+    </p>
+
+    <h2>第1条（取得する個人情報）</h2>
+    <p>本サービスでは、ユーザーから以下の情報を取得・保存します。</p>
+    <ul>
+        <li><strong>アカウント情報（任意登録）</strong><br>
+            メールアドレス<br>
+            パスワード（Argon2でハッシュ化し平文は保存しません）<br>
+            二要素認証（MFA）設定情報
+        </li>
+        <li><strong>学習履歴データ</strong><br>
+            コンテンツ視聴状況、完了状況、クイズ解答履歴、正答率
+        </li>
+        <li><strong>お問い合わせ情報</strong><br>
+            氏名（またはニックネーム）、メールアドレス、お問い合わせ内容
+        </li>
+        <li><strong>アクセスログ・端末情報</strong><br>
+            IPアドレス、ブラウザ情報、OS情報、Cookie等
+        </li>
+    </ul>
+
+    <h2>第2条（利用目的）</h2>
+    <ul>
+        <li>ログイン認証、MFAによる本人確認</li>
+        <li>学習進捗の記録および表示</li>
+        <li>不正アクセス防止等のセキュリティ維持</li>
+        <li>お問い合わせへの回答</li>
+        <li>サービス改善・品質向上</li>
+    </ul>
+
+    <h2>第3条（外部サービスの利用とデータの送信）</h2>
+    <ul>
+        <li><strong>Cloudflare Turnstile</strong><br>
+        BOT判定のため、IPアドレス・ブラウザ情報等が送信される場合があります。</li>
+
+        <li><strong>Slack</strong><br>
+        お問い合わせ内容（メールアドレス、本文等）が送信される場合があります。</li>
+
+        <li><strong>YouTube</strong><br>
+        動画再生時はGoogleのプライバシーポリシーが適用されます。</li>
+    </ul>
+
+    <h2>第4条（個人情報の第三者提供）</h2>
+    <p>外部サービス連携および法令に基づく場合を除き、ユーザーの同意なく第三者提供は行いません。</p>
+
+    <h2>第5条（安全管理措置）</h2>
+    <ul>
+        <li>パスワードの強力なハッシュ化</li>
+        <li>通信のSSL/TLS暗号化</li>
+        <li>アクセス権限の適切な管理</li>
+    </ul>
+
+    <h2>第6条（個人情報の開示・訂正・削除）</h2>
+    <p>
+        ユーザーはマイページから情報を確認・修正できます。<br>
+        アカウント削除を希望する場合、お問い合わせフォームより連絡することで削除が可能です。
+    </p>
+
+    <h2>第7条（プライバシーポリシーの変更）</h2>
+    <p>
+        本ポリシーは予告なく変更される場合があります。変更後は本サイト掲載時に効力を持ちます。
+    </p>
+
+    <h2>第8条（お問い合わせ窓口）</h2>
+    <p>
+        本ポリシーに関するお問い合わせは、お問い合わせフォームよりご連絡ください。
+    </p>
+
+    <p>制定日: 2025年11月13日<br>
+    運営: 名古屋情報メディア専門学校 卒業研究 S02 グループ
+    </p>
+
+</main>
+
+<footer>
+    <p>&copy; 2025 セキュリティ学習ポータル | <a href="/contact">お問い合わせ</a></p></p>
+  </footer>
+  
+
+<script>
+(function() {
+    function checkLoginStatus() {
+        // access_token をチェック (推奨構成と一致)
+        const token = localStorage.getItem('access_token');
+        return { loggedIn: !!token };
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const authButton = document.getElementById('auth-button');
+        if (!authButton) return;
+        const status = checkLoginStatus();
+
+        if (status.loggedIn) {
+            authButton.textContent = 'マイページ';
+            authButton.href = '/mypage';
+        } else {
+            authButton.textContent = 'ログイン';
+            authButton.href = '/login';
+        }
+    });
+})();
+</script>
+
+</body>
+</html>

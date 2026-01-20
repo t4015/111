@@ -1,0 +1,38 @@
+<header class="ud-header">
+    <div class="site-logo">
+        <a href="/top">
+            <span class="material-icons-round icon" aria-hidden="true">security</span>
+            <span>根本原因から学ぶWebセキュリティ</span>
+        </a>
+    </div>
+    <div class="user-menu">
+        <a href="/login" id="header-auth-button" class="header-btn">
+            <span class="material-icons-round" aria-hidden="true">login</span>
+            <span>ログイン</span>
+        </a>
+    </div>
+</header>
+
+<script>
+    (function() {
+        function checkLoginStatus() {
+            const token = localStorage.getItem('access_token'); 
+            return { loggedIn: !!token };
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const authButton = document.getElementById('header-auth-button');
+            if (!authButton) return;
+
+            const status = checkLoginStatus();
+
+            if (status.loggedIn) {
+                authButton.innerHTML = '<span class="material-icons-round" aria-hidden="true">account_circle</span> <span>マイページ</span>';
+                authButton.href = '/mypage';
+            } else {
+                authButton.innerHTML = '<span class="material-icons-round" aria-hidden="true">login</span> <span>ログイン</span>';
+                authButton.href = '/login';
+            }
+        });
+    })();
+</script>

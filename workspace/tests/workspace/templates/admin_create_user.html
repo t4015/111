@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理者メニュー: アカウント作成</title>
+    
+    <link rel="stylesheet" href="/static/css/style.css">
+    
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    
+    <style>
+        /* ページ固有のスタイル */
+
+        /* ★ 管理者用ページのスタイル ★ */
+        .admin-page-card {
+            background-color: #fffbe6;
+            border: 1px solid #ffe58f;
+        }
+
+        .admin-page-card h2 {
+            background-color: #fff9e0;
+            color: #d46b08;
+            border-bottom: 1px solid #ffe58f;
+            padding: 15px 20px; 
+            margin: 0;
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+        
+        .setting-card {
+            background-color: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-card);
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+        
+        .card-content {
+            padding: 30px;
+        }
+
+        .admin-page-card .btn-create-admin {
+            background-color: #d46b08;
+            color: white;
+            border: none;
+        }
+
+        .admin-page-card .btn-create-admin:hover {
+            background-color: #ad4e00;
+        }
+
+        /* ★ 権限(role)選択のスタイル ★ */
+        .role-selection {
+            display: flex;
+            gap: 20px;
+            margin-top: 10px;
+        }
+
+        .role-selection label {
+            display: flex;
+            align-items: center;
+            font-size: 1rem;
+            font-weight: normal;
+            cursor: pointer;
+        }
+
+        .role-selection input[type="radio"] {
+            margin-right: 8px;
+            width: auto;
+            transform: scale(1.2);
+        }
+
+        /* --- QRコード表示エリア --- */
+        .qr-code-section {
+            display: none;
+            text-align: left;
+        }
+
+        .qr-code-section h2 {
+            color: #2c3e50;
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f3f4f6;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 1.3rem;
+        }
+
+        .qr-code-section p {
+            font-size: 1.05em;
+            line-height: 1.6;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .qr-code-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        #qr-code-image {
+            max-width: 250px;
+            width: 100%;
+            border: 5px solid #ecf0f1;
+            border-radius: 8px;
+        }
+
+        .mfa-steps {
+            list-style: none;
+            padding-left: 0;
+            margin-top: 20px;
+        }
+
+        .mfa-steps li {
+            position: relative;
+            padding-left: 45px;
+            font-size: 1.1em;
+            margin-bottom: 20px;
+        }
+
+        .mfa-steps .step-number {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 30px;
+            height: 30px;
+            background-color: #3498db;
+            color: white;
+            font-weight: bold;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+        }
+
+        .mfa-steps .step-content {
+            font-weight: bold;
+            color: #2c3e50;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .mfa-steps .step-description {
+            font-size: 0.9em;
+            color: #555;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+
+
+<body>
+
+    {% include "components/header.html" %}
+
+    <main id="main-content" style="display: none;"> 
+        <h1 class="page-title">管理者メニュー: アカウント作成</h1>
+
+        <div id="message-area" class="message-area"></div>
+
+        <section class="setting-card admin-page-card">
+            <h2>新規アカウント作成</h2>
+            <form id="admin-create-form">
+                <div class="card-content">
+                    <p>
+                        管理者権限で新しいアカウントを作成します。<br>
+                        作成されたユーザーは、**初回ログイン後にMFA（二要素認証）を自身で設定する必要があります。**
+                    </p>
+
+                    <div class="form-group">
+                        <label for="display_name">表示名 (ニックネーム)</label>
+                        <input type="text" id="display_name" name="display_name" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">メールアドレス (ログインID)</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">初期パスワード</label>
+                        <input type="password" id="password" name="password" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>アカウント権限</label>
+                        <div class="role-selection">
+                            <label>
+                                <input type="radio" id="role_user" name="role" value="USER" checked>
+                                一般ユーザー (USER)
+                            </label>
+                            <label>
+                                <input type="radio" id="role_admin" name="role" value="ADMIN">
+                                管理者 (ADMIN)
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-create-admin" id="create-button">この内容でアカウントを作成</button>
+                    <a href="/mypage" style="margin-left: 15px; color: #555;">キャンセル</a>
+                </div>
+            </form>
+        </section>
+
+
+        <section id="qr-code-section" class="setting-card qr-code-section">
+            <h2>MFA（二要素認証）情報</h2>
+            <div class="card-content">
+                <p>
+                    新しいアカウントの作成に成功しました。<br>
+                    以下のQRコードを、**作成したユーザーへ安全に伝達**してください。
+                    ユーザーは初回ログイン後、このQRコードを使って認証アプリを設定する必要があります。
+                </p>
+
+                <div class="qr-code-container">
+                    <img id="qr-code-image" src="" alt="MFA QR Code" style="display: block; margin: 0 auto;">
+                </div>
+
+                <ol class="mfa-steps">
+                    <li>
+                        <span class="step-number">1</span>
+                        <span class="step-content">認証アプリでスキャン</span>
+                        <span class="step-description">Google Authenticatorなどの認証アプリで上記のQRコードをスキャンします。</span>
+                    </li>
+                    <li>
+                        <span class="step-number">2</span>
+                        <span class="step-content">初回ログインの指示</span>
+                        <span class="step-description">
+                            作成されたユーザーに、このQRコードを使ってアプリを設定し、
+                            通常通りメールアドレスとパスワードでログインするよう指示してください。
+                        </span>
+                    </li>
+                </ol>
+
+                <button onclick="window.location.reload();" class="btn"
+                    style="width: 100%; text-align: center; background-color: #2ecc71;">
+                    別のアカウントを作成する
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // --- 認証ガードと権限チェック ---
+
+        const token = localStorage.getItem('access_token');
+        const mainContent = document.getElementById('main-content');
+        const messageArea = document.getElementById('message-area');
+
+        // (A) ページ読み込み時の認証・権限チェック
+        (function () {
+            if (!token) {
+                alert('このページにアクセスするにはログインが必要です。');
+                window.location.href = '/login';
+                return;
+            }
+
+            fetch('/api/me', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+                .then(response => {
+                    if (response.status === 401) {
+                        throw new Error('セッションが切れました。再度ログインしてください。');
+                    }
+                    if (!response.ok) {
+                        throw new Error(`情報取得エラー: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(result => {
+                    if (result.success && result.user && result.user.role === 'ADMIN') {
+                        // ADMIN権限あり -> 表示
+                        mainContent.style.display = 'block';
+                    } else {
+                        // ADMIN権限なし -> 追い出し
+                        alert('アクセス権限がありません。このページは管理者専用です。');
+                        window.location.href = '/mypage';
+                    }
+                })
+                .catch(error => {
+                    console.error('Fetch Error:', error.message);
+                    alert('エラーが発生しました: ' + error.message);
+                    window.location.href = '/mypage';
+                });
+        })();
+
+
+        // (B) フォーム送信処理 (アカウント作成)
+        document.getElementById('admin-create-form').addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            const messageArea = document.getElementById('message-area');
+            const createButton = document.getElementById('create-button');
+            const adminCreateFormSection = document.getElementById('admin-create-form').closest('.setting-card');
+
+            showMessage('', 'clear');
+            createButton.disabled = true;
+            createButton.textContent = '処理中...';
+
+            const formData = new FormData(event.target);
+            const data = Object.fromEntries(formData.entries());
+            const token = localStorage.getItem('access_token');
+
+            fetch('/api/admin/create_user', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(data),
+            })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success && result.qr_code_image) {
+                        // ★ 作成成功 ★
+                        adminCreateFormSection.style.display = 'none';
+
+                        const qrSection = document.getElementById('qr-code-section');
+                        document.getElementById('qr-code-image').src = result.qr_code_image;
+                        qrSection.style.display = 'block';
+
+                        showMessage('アカウントの作成に成功しました。', 'success');
+
+                    } else {
+                        // ★ 作成失敗 ★
+                        showMessage(result.message || 'アカウントの作成に失敗しました。', 'error');
+                        createButton.disabled = false;
+                        createButton.textContent = 'この内容でアカウントを作成';
+                    }
+                })
+                .catch(error => {
+                    console.error('Fetch Error:', error);
+                    showMessage('サーバーとの通信に失敗しました。', 'error');
+                    createButton.disabled = false;
+                    createButton.textContent = 'この内容でアカウントを作成';
+                });
+        });
+
+        // メッセージ表示関数
+        function showMessage(message, type = 'success') {
+            if (type === 'clear') {
+                messageArea.style.display = 'none';
+                return;
+            }
+            messageArea.textContent = message;
+            messageArea.className = `message-area ${type === 'success' ? 'message-success' : 'message-error'}`;
+            messageArea.style.display = 'block';
+            window.scrollTo(0, 0);
+        }
+
+    </script>
+
+</body>
+
+</html>

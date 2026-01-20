@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理者ダッシュボード | 根本原因から学ぶWebセキュリティ</title>
+    
+    <link rel="stylesheet" href="/static/css/style.css">
+    
+    <link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+
+    <style>
+        /* --- 管理者ダッシュボード固有のスタイル --- */
+        
+        .page-title {
+            font-size: 2rem;
+            color: var(--color-text-main);
+            border-bottom: 3px solid var(--color-primary);
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+
+        /* グリッドレイアウト */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            grid-template-areas: 
+                "account import"
+                "manage manage";
+        }
+        .section-account { grid-area: account; }
+        .section-import  { grid-area: import; }
+        .section-manage  { grid-area: manage; }
+
+        @media (max-width: 900px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+                grid-template-areas: 
+                    "account"
+                    "import"
+                    "manage";
+            }
+        }
+
+        /* カードのスタイル調整 (共通CSSの .ud-card をベースに拡張) */
+        .card {
+            background: var(--color-surface);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-card);
+            overflow: hidden;
+            border: 1px solid var(--color-border);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        
+        .card-header {
+            background: #f8f9fa;
+            color: var(--color-text-main);
+            padding: 20px;
+            border-bottom: 1px solid var(--color-border);
+        }
+        
+        .card-header h2 {
+            margin: 0;
+            font-size: 1.3rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--color-primary-dark);
+        }
+        
+        .card-content {
+            padding: 25px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .card-description {
+            margin-top: 0;
+            color: var(--color-text-sub);
+            margin-bottom: 20px;
+            line-height: 1.6;
+            min-height: 3em;
+        }
+
+        /* ボタン類 */
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: auto;
+        }
+        
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 12px;
+            font-weight: 700;
+        }
+        
+        .btn-secondary {
+            background-color: #2c3e50;
+            color: white;
+        }
+        .btn-secondary:hover { background-color: #1a252f; }
+        
+        .btn-import {
+            background-color: var(--color-success);
+            color: white;
+        }
+        .btn-import:hover { background-color: #218838; }
+        
+        .btn-delete {
+            background-color: var(--color-accent);
+            color: white;
+            padding: 6px 12px;
+            font-size: 0.9rem;
+            width: auto;
+        }
+        .btn-delete:hover { background-color: #a71d2a; }
+        
+        .btn-update {
+            background-color: #95a5a6;
+            color: white;
+            margin-top: 15px;
+        }
+        .btn-update:hover { background-color: #7f8c8d; }
+
+        /* コンテンツ管理リスト */
+        .vuln-manage-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid var(--color-border);
+            border-radius: var(--border-radius);
+            background-color: #fafafa;
+        }
+        
+        .vuln-manage-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--color-border);
+            font-size: 0.95rem;
+        }
+        
+        .vuln-manage-item:last-child { border-bottom: none; }
+        .vuln-manage-item span { font-weight: 500; }
+
+        /* コードブロック */
+        code {
+            background: #eee;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.9em;
+            color: #c7254e;
+        }
+    </style>
+</head>
+
+<body>
+
+    {% include "components/header.html" %}
+
+    <main id="main-content" style="display: none;">
+        <h1 class="page-title">管理者ダッシュボード</h1>
+        
+        <div id="message-area" class="message-area"></div>
+
+        <div class="dashboard-grid">
+            
+            <section class="card section-account">
+                <div class="card-header">
+                    <h2><span class="material-icons-round">people_alt</span> アカウント管理</h2>
+                </div>
+                <div class="card-content">
+                    <p class="card-description">
+                        ユーザーアカウントの新規作成、および既存ユーザーの管理（一覧表示・凍結・削除）を行います。
+                    </p>
+                    <div class="btn-group">
+                        <a href="/admin_create_user" class="btn">
+                            <span class="material-icons-round">person_add</span> 新規アカウント作成
+                        </a>
+                        <a href="/admin_users" class="btn btn-secondary">
+                            <span class="material-icons-round">manage_accounts</span> ユーザー管理 (一覧・凍結)
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card section-import">
+                <div class="card-header">
+                    <h2><span class="material-icons-round">cloud_upload</span> コンテンツインポート</h2>
+                </div>
+                <div class="card-content">
+                    <p class="card-description">
+                        CSVまたはJSONファイルをアップロードして、脆弱性データを一括登録します。<br>
+                        <small style="color: var(--color-text-sub);">※ 既存のデータは維持され、新しいデータが追加されます。</small>
+                    </p>
+                    <form id="import-vuln-form" enctype="multipart/form-data" style="margin-top: auto;">
+                        <div class="form-group">
+                            <label>ファイル選択 (.csv, .json)</label>
+                            <input type="file" name="file" accept=".csv,.json" required>
+                        </div>
+                        <button type="submit" class="btn btn-import" id="import-btn">
+                            <span class="material-icons-round">upload</span> インポート実行
+                        </button>
+                    </form>
+                    <div style="margin-top: 20px; font-size: 0.9em; color:var(--color-text-sub);">
+                        <strong>CSVフォーマット例:</strong><br>
+                        <code>vuln_name,video_url,description...</code>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card section-manage">
+                <div class="card-header">
+                    <h2><span class="material-icons-round">list_alt</span> コンテンツ管理 (削除)</h2>
+                </div>
+                <div class="card-content">
+                    <p class="card-description">
+                        登録済みの脆弱性コンテンツ一覧です。<br>
+                        <small style="color: var(--color-accent);">⚠️ 削除すると元に戻せません。関連する学習進捗も削除されます。</small>
+                    </p>
+                    <ul class="vuln-manage-list" id="vuln-manage-list">
+                        <li style="padding: 15px; text-align: center;">読み込み中...</li>
+                    </ul>
+                    <button class="btn btn-update" onclick="loadVulnerabilities()">
+                        <span class="material-icons-round">refresh</span> 一覧を更新
+                    </button>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 セキュリティ学習ポータル | <a href="/contact">お問い合わせ</a></p></p>
+    </footer>
+
+    <script>
+        // ★ auth.pyに合わせて access_token を使用
+        const token = localStorage.getItem('access_token');
+        const mainContent = document.getElementById('main-content');
+        const messageArea = document.getElementById('message-area');
+
+        // 認証チェック
+        (function () {
+            if (!token) {
+                window.location.href = '/login';
+                return;
+            }
+            fetch('/api/me', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.user.role === 'ADMIN') {
+                    mainContent.style.display = 'block';
+                } else {
+                    alert('管理者権限が必要です。');
+                    window.location.href = '/mypage';
+                }
+            })
+            .catch(() => {
+                window.location.href = '/login';
+            });
+        })();
+
+        function showMessage(msg, type) {
+            messageArea.textContent = msg;
+            messageArea.className = `message-area ${type === 'success' ? 'message-success' : 'message-error'}`;
+            messageArea.style.display = 'block';
+            window.scrollTo(0, 0);
+            setTimeout(() => { messageArea.style.display = 'none'; }, 5000);
+        }
+
+        // インポート処理
+        document.getElementById('import-vuln-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const btn = document.getElementById('import-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="material-icons-round">hourglass_top</span> アップロード中...';
+
+            const formData = new FormData(e.target);
+            fetch('/api/admin/import_vulnerabilities', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.success) {
+                    showMessage(res.message, 'success');
+                    e.target.reset();
+                    loadVulnerabilities();
+                } else {
+                    let msg = res.message;
+                    if (res.errors && res.errors.length > 0) msg += '\n' + res.errors.join('\n');
+                    showMessage(msg, 'error');
+                }
+            })
+            .catch(err => showMessage('通信エラーが発生しました。', 'error'))
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerHTML = '<span class="material-icons-round">upload</span> インポート実行';
+            });
+        });
+
+        // 脆弱性一覧読み込み
+        function loadVulnerabilities() {
+            const listEl = document.getElementById('vuln-manage-list');
+            if (!listEl) return;
+            listEl.innerHTML = '<li style="padding: 15px; text-align: center;">読み込み中...</li>';
+
+            fetch('/api/vulnerabilities')
+            .then(res => res.json())
+            .then(res => {
+                if (res.success) {
+                    listEl.innerHTML = '';
+                    if (res.data.length === 0) {
+                        listEl.innerHTML = '<li style="padding: 15px; text-align: center;">登録されているコンテンツはありません。</li>';
+                        return;
+                    }
+                    res.data.forEach(v => {
+                        const li = document.createElement('li');
+                        li.className = 'vuln-manage-item';
+                        li.innerHTML = `<span>${v.vuln_id}. ${v.vuln_name}</span><button class="btn btn-delete" onclick="deleteVulnerability(${v.vuln_id}, '${v.vuln_name}')">削除</button>`;
+                        listEl.appendChild(li);
+                    });
+                } else {
+                    listEl.innerHTML = '<li style="padding: 15px; text-align: center; color: red;">読み込み失敗</li>';
+                }
+            })
+            .catch(err => {
+                listEl.innerHTML = '<li style="padding: 15px; text-align: center; color: red;">通信エラー</li>';
+            });
+        }
+
+        // 脆弱性削除
+        window.deleteVulnerability = function (id, name) {
+            if (!confirm(`脆弱性「${name}」を削除しますか？\n※この操作は元に戻せません。`)) return;
+            fetch(`/api/admin/delete_vulnerability/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.success) {
+                    showMessage(res.message, 'success');
+                    loadVulnerabilities();
+                } else {
+                    showMessage(res.message, 'error');
+                }
+            })
+            .catch(err => showMessage('通信エラーが発生しました。', 'error'));
+        };
+
+        loadVulnerabilities();
+    </script>
+
+</body>
+</html>
