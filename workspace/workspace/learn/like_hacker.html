@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ content_title }} // ROOT ACCESS GRANTED</title>
+    <!-- ハッカー風フォント -->
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* Hacker Palette */
+            --bg-color: #050505;
+            --term-green: #00ff41;
+            --term-green-dim: rgba(0, 255, 65, 0.2);
+            --term-bg: #0d0d0d;
+            --term-border: #333;
+            --alert-color: #ff3333;
+            
+            --font-ui: "Share Tech Mono", monospace;
+            --font-body: "Noto Sans JP", sans-serif;
+        }
+
+        body {
+            font-family: var(--font-ui);
+            background-color: var(--bg-color);
+            color: var(--term-green);
+            margin: 0;
+            padding: 0;
+            line-height: 1.5;
+            overflow-x: hidden;
+        }
+
+        /* --- CRT Scanline Effect --- */
+        body::before {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 9999;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        /* --- ヘッダー --- */
+        .hacker-header {
+            background-color: rgba(0, 0, 0, 0.9);
+            border-bottom: 1px solid var(--term-green);
+            padding: 10px 30px;
+            display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 1000;
+            box-shadow: 0 0 15px var(--term-green-dim);
+        }
+
+        .sys-logo a {
+            font-size: 1.5rem; font-weight: bold; color: var(--term-green);
+            text-decoration: none; text-transform: uppercase; letter-spacing: 2px;
+            text-shadow: 0 0 5px var(--term-green);
+        }
+        .sys-logo .blink { animation: blink 1s infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+        .sys-status a {
+            border: 1px solid var(--term-green); padding: 5px 15px;
+            color: var(--term-green); text-decoration: none;
+            font-size: 0.9rem; transition: 0.2s; background: rgba(0, 50, 0, 0.3);
+        }
+        .sys-status a:hover {
+            background: var(--term-green); color: #000; box-shadow: 0 0 10px var(--term-green);
+        }
+
+        /* --- メインレイアウト --- */
+        .main-terminal {
+            max-width: 1400px; margin: 30px auto; padding: 0 20px;
+        }
+
+        .cmd-nav {
+            margin-bottom: 20px; display: flex; justify-content: space-between;
+        }
+        .cmd-link {
+            color: #888; text-decoration: none; font-size: 0.9rem;
+            display: flex; align-items: center; gap: 5px;
+        }
+        .cmd-link:hover { color: var(--term-green); }
+
+        .layout-grid {
+            display: grid; grid-template-columns: 1.3fr 0.7fr; gap: 30px;
+            margin-bottom: 40px;
+        }
+        @media (max-width: 1024px) { .layout-grid { grid-template-columns: 1fr; } }
+
+        /* --- モジュール (Card) --- */
+        .module-frame {
+            border: 1px solid var(--term-border);
+            background: rgba(10, 10, 10, 0.8);
+            margin-bottom: 20px; position: relative;
+        }
+        .module-frame::before { /* 四隅のアクセント */
+            content: ''; position: absolute; top: -1px; left: -1px; width: 10px; height: 10px;
+            border-top: 2px solid var(--term-green); border-left: 2px solid var(--term-green);
+        }
+        .module-frame::after {
+            content: ''; position: absolute; bottom: -1px; right: -1px; width: 10px; height: 10px;
+            border-bottom: 2px solid var(--term-green); border-right: 2px solid var(--term-green);
+        }
+
+        .module-header {
+            background: #111; color: var(--term-green); padding: 5px 15px;
+            font-size: 0.9rem; border-bottom: 1px solid #333;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .module-body { padding: 20px; }
+
+        /* 動画エリア */
+        .video-wrapper {
+            position: relative; padding-bottom: 56.25%; background: #000;
+            border: 1px solid #333; margin-bottom: 20px;
+        }
+        .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+
+        .target-info {
+            border-bottom: 1px dashed #333; padding-bottom: 15px; margin-bottom: 15px;
+            display: flex; justify-content: space-between; align-items: flex-start;
+        }
+        .target-title { margin: 0; font-size: 1.8rem; color: #fff; text-shadow: 0 0 5px var(--term-green); }
+        .target-desc { color: #aaa; font-family: var(--font-body); font-size: 0.95rem; }
+
+        /* ハッカースイッチ */
+        .hack-switch {
+            position: relative; display: inline-block; width: 140px; height: 34px;
+        }
+        .hack-switch input { display: none; }
+        .switch-btn {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: #000; border: 1px solid #555; color: #555;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; cursor: pointer; transition: 0.3s;
+        }
+        .hack-switch input:checked + .switch-btn {
+            background: rgba(0, 255, 65, 0.1); border-color: var(--term-green);
+            color: var(--term-green); box-shadow: 0 0 10px var(--term-green-dim);
+        }
+        .hack-switch input:checked + .switch-btn::after {
+            content: "[ COMPLETED ]";
+        }
+        .hack-switch .switch-btn::after { content: "[ MARK DONE ]"; }
+
+        /* パズル (Payload Builder) */
+        .payload-builder {
+            border: 1px solid #333; background: #050505; padding: 15px; margin-top: 20px;
+        }
+        .builder-header {
+            display: flex; justify-content: space-between; font-size: 0.8rem; color: #666; margin-bottom: 10px;
+        }
+        .hex-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+        .hex-chip {
+            background: #111; border: 1px solid var(--term-green); color: var(--term-green);
+            padding: 5px 10px; cursor: pointer; transition: 0.1s; user-select: none;
+        }
+        .hex-chip:hover { background: var(--term-green); color: #000; }
+        .hex-chip:active { transform: translateY(2px); }
+
+        .decrypt-result {
+            margin-top: 15px; border-left: 2px solid var(--term-green); padding-left: 10px;
+            color: #fff; display: none; font-family: monospace;
+        }
+
+        /* --- 体験ウィンドウ (Target System) --- */
+        .target-window {
+            height: 500px; display: flex; flex-direction: column;
+            border: 1px solid #444; background: #000;
+        }
+        
+        .win-bar {
+            background: #222; color: #aaa; padding: 3px 10px; font-size: 0.8rem;
+            display: flex; justify-content: space-between; border-bottom: 1px solid #444;
+        }
+
+        /* Terminal Style */
+        .term-screen {
+            flex-grow: 1; padding: 10px; overflow-y: auto; font-family: monospace;
+            color: #ccc;
+        }
+        .term-prompt { color: var(--term-green); margin-right: 8px; }
+        #terminal-input {
+            background: transparent; border: none; color: #fff; flex-grow: 1;
+            font-family: inherit; font-size: 1.1rem; outline: none;
+        }
+
+        /* Browser Style (Fake) */
+        .browser-nav { background: #333; padding: 5px; display: flex; gap: 5px; }
+        .url-input {
+            flex-grow: 1; background: #000; border: 1px solid #555; color: var(--term-green);
+            padding: 2px 10px; font-size: 0.9rem;
+        }
+        .web-view {
+            flex-grow: 1; background: #fff; color: #000; padding: 20px; text-align: center;
+            position: relative;
+        }
+        .web-view h1 { font-family: sans-serif; font-weight: 900; font-size: 2.5rem; margin: 40px 0 20px; }
+        .web-search {
+            border: 2px solid #000; padding: 8px; width: 70%; font-size: 1rem;
+        }
+        .web-btn {
+            background: #000; color: #fff; border: none; padding: 8px 20px; cursor: pointer;
+        }
+
+        /* Alert (Red Box) */
+        .sys-alert-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center;
+            z-index: 50;
+        }
+        .sys-alert-box {
+            background: #000; border: 2px solid var(--alert-color); color: var(--alert-color);
+            padding: 20px; width: 280px; text-align: center; box-shadow: 0 0 20px var(--alert-color);
+        }
+        .sys-btn {
+            background: var(--alert-color); color: #000; border: none; padding: 5px 15px;
+            margin-top: 15px; cursor: pointer; font-weight: bold;
+        }
+
+        /* --- コード解析 (Collapsible) --- */
+        .code-module { display: none; border-color: var(--term-green); }
+        .code-module.visible { display: block; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .code-grid { display: flex; border-top: 1px solid #333; }
+        .code-half { flex: 1; padding: 10px; border-right: 1px solid #333; background: #080808; }
+        .tag-vuln { color: var(--alert-color); font-weight: bold; display: block; margin-bottom: 5px; }
+        .tag-fix { color: var(--term-green); font-weight: bold; display: block; margin-bottom: 5px; }
+        pre { margin: 0; color: #ccc; overflow-x: auto; font-size: 0.85rem; }
+
+        /* --- クイズ --- */
+        .quiz-container-full { text-align: center; }
+        .quiz-q { font-size: 1.2rem; margin-bottom: 20px; color: #fff; }
+        .quiz-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .quiz-btn {
+            background: #111; border: 1px solid #333; padding: 15px; color: #888;
+            cursor: pointer; transition: 0.2s; text-align: left;
+        }
+        .quiz-btn:hover { border-color: var(--term-green); color: var(--term-green); background: rgba(0,255,65,0.05); }
+        
+        .quiz-res {
+            margin-top: 20px; padding: 15px; border: 1px solid var(--term-green);
+            color: var(--term-green); display: none; background: rgba(0,255,65,0.05);
+        }
+
+        /* --- フッター --- */
+        footer {
+            text-align: center; padding: 40px; border-top: 1px solid #333;
+            color: #555; font-size: 0.8rem; margin-top: 50px;
+        }
+        
+        .next-nav { text-align: right; margin-top: 30px; }
+        .next-btn {
+            background: var(--term-green); color: #000; text-decoration: none;
+            padding: 10px 30px; font-weight: bold; display: inline-block;
+            box-shadow: 0 0 10px var(--term-green); transition: 0.2s;
+        }
+        .next-btn:hover { background: #fff; box-shadow: 0 0 20px #fff; transform: scale(1.05); }
+
+    </style>
+</head>
+<body>
+    
+    <!-- データ受け渡しタグ -->
+    <script id="data-video-id" type="application/json">{{ video_id | tojson | safe }}</script>
+    <script id="data-target" type="application/json">{{ target_keyword | tojson | safe }}</script>
+    <script id="data-success" type="application/json">{{ success_message | tojson | safe }}</script>
+    <script id="data-exp-type" type="application/json">{{ experience_type | tojson | safe }}</script>
+    <script id="data-puzzle" type="application/json">{{ puzzle_data | tojson | safe }}</script>
+    <script id="data-quiz" type="application/json">{{ quiz_data | tojson | safe }}</script>
+    <script id="data-vuln-id" type="application/json">{{ vuln_id | tojson | safe }}</script>
+
+    <header class="hacker-header">
+        <div class="sys-logo">
+            <a href="/top">ROOT_CAUSE:<span class="blink">_</span></a>
+        </div>
+        <div class="sys-status">
+            <a href="/login" id="auth-button">ESTABLISH_SESSION</a>
+        </div>
+    </header>
+
+    <div class="main-terminal">
+        
+        <div class="cmd-nav">
+            <a href="/top" class="cmd-link">&lt; cd .. (RETURN)</a>
+            <a href="#" id="next-lesson-top" class="cmd-link" style="display:none; color:var(--term-green);">./next_target.sh &gt;</a>
+        </div>
+
+        <div class="layout-grid">
+            
+            <!-- Left: Intel -->
+            <div class="left-col">
+                <div class="module-frame">
+                    <div class="module-header">
+                        <span>[ MODULE: LECTURE_DATA ]</span>
+                        <span>STATUS: ACTIVE</span>
+                    </div>
+                    <div class="module-body">
+                        
+                        <div class="video-wrapper">
+                            <iframe id="video-player" src="" frameborder="0" allowfullscreen></iframe>
+                        </div>
+
+                        <div class="target-info">
+                            <div>
+                                <h1 class="target-title">{{ content_title }}</h1>
+                            </div>
+                            <!-- Hacker Switch -->
+                            <label class="hack-switch">
+                                <input type="checkbox" id="progress-check">
+                                <div class="switch-btn"></div>
+                            </label>
+                        </div>
+
+                        <p class="target-desc">{{ content_desc }}</p>
+
+                        <!-- Puzzle -->
+                        <div class="payload-builder">
+                            <div class="builder-header">
+                                <span>>> CONSTRUCT PAYLOAD</span>
+                                <div>
+                                    <span style="cursor:pointer; margin-right:10px;" onclick="resetInput()">[CLR]</span>
+                                    <span style="cursor:pointer;" onclick="toggleAnswer()">[DEC]</span>
+                                </div>
+                            </div>
+                            <div class="hex-chips" id="word-bank"></div>
+                            <div id="answer-area" class="decrypt-result">
+                                TARGET_STRING: <span id="answer-code"></span>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Target System -->
+            <div class="right-col">
+                
+                <!-- TERMINAL -->
+                <div id="window-terminal" class="target-window" style="display:none;">
+                    <div class="win-bar">
+                        <span>SSH: root@vulnerable-host</span>
+                        <span>ENC: AES-256</span>
+                    </div>
+                    <div class="term-screen" id="terminal-body">
+                        <div style="color:#555;"># Initializing exploit environment...</div>
+                        <div style="color:var(--term-green); margin-bottom:10px;"># Connection established. Waiting for input.</div>
+                        <div id="output-history"></div>
+                        <div style="display:flex; margin-top:5px;">
+                            <span class="term-prompt">root@box:~#</span>
+                            <input type="text" id="terminal-input" autocomplete="off" autofocus>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BROWSER -->
+                <div id="window-browser" class="target-window" style="display:none; background:#fff; border-color:#ccc;">
+                    <div class="win-bar" style="background:#ddd; color:#333;">
+                        <span>Insecure Browser v1.0</span>
+                    </div>
+                    <div class="browser-nav">
+                        <div class="url-input">http://192.168.1.10/search</div>
+                    </div>
+                    <div class="web-view">
+                        <h1 class="web-logo" style="color:#000;">Search<span style="color:var(--term-green)">DB</span></h1>
+                        <div style="display:flex; justify-content:center; gap:5px;">
+                            <input type="text" id="browser-input" class="web-search" placeholder="Query..." autocomplete="off">
+                            <button class="web-btn" onclick="checkInput()">EXEC</button>
+                        </div>
+                        <!-- Alert -->
+                        <div id="fake-alert-overlay" class="sys-alert-overlay">
+                            <div class="sys-alert-box">
+                                <h2 style="margin:0 0 10px 0;">SYSTEM ALERT</h2>
+                                <p id="alert-msg" style="color:#fff; font-weight:bold;">XSS DETECTED</p>
+                                <button class="sys-btn" onclick="closeAlert()">ACKNOWLEDGE</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Code Analysis -->
+                <div id="secret-code-section" class="module-frame code-module">
+                    <div class="module-header">
+                        <span>[ SOURCE_CODE_DUMP ]</span>
+                        <span>UNLOCKED</span>
+                    </div>
+                    <div class="code-grid">
+                        <div class="code-half">
+                            <span class="tag-vuln">>> VULNERABLE</span>
+                            <pre>{{ vulnerable_code }}</pre>
+                        </div>
+                        <div class="code-half" style="border:none;">
+                            <span class="tag-fix">>> PATCHED</span>
+                            <pre>{{ fixed_code }}</pre>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Quiz (Full Width) -->
+        <div class="module-frame">
+            <div class="module-header">
+                <span>[ KNOWLEDGE_VERIFICATION ]</span>
+            </div>
+            <div class="module-body quiz-container-full" id="quiz-container">
+                <p style="color:#555;">Loading assessment data...</p>
+            </div>
+        </div>
+
+        <div class="next-nav">
+            <a href="#" id="next-lesson-bottom" class="next-btn" style="display:none;">
+                EXECUTE NEXT STAGE >>
+            </a>
+        </div>
+
+    </div>
+
+    <footer>
+        <p>SYSTEM STATUS: ONLINE | 2025 NCS PROJECT</p>
+    </footer>
+
+    <script>
+        // --- Common Functions ---
+        function getJsonFromTag(id) {
+            const el = document.getElementById(id);
+            if (!el) return null;
+            try {
+                const text = el.textContent.trim();
+                if (!text || text === 'null' || text === 'None') return null;
+                let parsed = JSON.parse(text);
+                if (typeof parsed === 'string') {
+                    if (parsed.startsWith('[') || parsed.startsWith('{')) { try { return JSON.parse(parsed); } catch(e) { return parsed; } }
+                }
+                return parsed;
+            } catch (e) { console.error(`JSON Error (${id}):`, e); return null; }
+        }
+
+        const contentData = {
+            videoId:       getJsonFromTag('data-video-id') || "",
+            targetCommand: getJsonFromTag('data-target') || "",
+            successMessage: getJsonFromTag('data-success') || "Access Granted.",
+            experienceType: getJsonFromTag('data-exp-type') || "TERMINAL",
+            puzzleData:    getJsonFromTag('data-puzzle') || [],
+            quizData:      getJsonFromTag('data-quiz') 
+        };
+
+        // --- Init ---
+        function getYoutubeId(url) {
+            if (!url) return "";
+            const match = url.match(/[\?\&]v=([^&]+)/) || url.match(/\/embed\/([^?]+)/) || url.match(/^[\w-]{11}$/);
+            return (match && match.length > 0) ? (match[1] || match[0]) : url;
+        }
+
+        if (contentData.videoId) {
+            document.getElementById('video-player').src = `https://www.youtube.com/embed/${getYoutubeId(contentData.videoId)}`;
+        }
+        document.getElementById('answer-code').textContent = contentData.targetCommand;
+
+        // Puzzle
+        const wordBank = document.getElementById('word-bank');
+        if (contentData.puzzleData && Array.isArray(contentData.puzzleData)) {
+            const shuffled = [...contentData.puzzleData].sort(() => Math.random() - 0.5);
+            shuffled.forEach(part => {
+                const chip = document.createElement('div');
+                chip.className = 'hex-chip';
+                chip.textContent = part.text;
+                chip.onclick = () => addInput(part.text);
+                wordBank.appendChild(chip);
+            });
+        } else { wordBank.innerHTML = '<span style="color:#555;">[NO_DATA]</span>'; }
+
+        // Window Switch
+        if (contentData.experienceType === 'BROWSER') {
+            document.getElementById('window-browser').style.display = 'flex';
+        } else {
+            document.getElementById('window-terminal').style.display = 'flex';
+        }
+
+        // Quiz
+        if (contentData.quizData) {
+            const q = contentData.quizData;
+            const container = document.getElementById('quiz-container');
+            container.innerHTML = `
+                <div class="quiz-q">QUERY: ${q.question}</div>
+                <div id="quiz-options-box" class="quiz-opts"></div>
+                <div id="quiz-explanation" class="quiz-res">
+                    <div style="font-weight:bold; margin-bottom:5px;">>> ANALYSIS REPORT</div>
+                    <p style="color:#ddd; margin:0;"><strong>CORRECT: ${q.answer}</strong><br>${q.explanation}</p>
+                    <button onclick="resetQuiz()" style="margin-top:10px; background:transparent; border:1px solid #555; color:#aaa; padding:5px 10px; cursor:pointer;">RETRY_SEQ</button>
+                </div>
+            `;
+            
+            const optionsBox = document.getElementById('quiz-options-box');
+            q.options.forEach(opt => {
+                if(opt.text) { 
+                    const btn = document.createElement('div');
+                    btn.className = 'quiz-btn';
+                    btn.innerHTML = `<span style="color:var(--term-green)">[${opt.label}]</span> ${opt.text}`;
+                    btn.onclick = function() { checkQuiz(this, opt.label === q.answer); };
+                    optionsBox.appendChild(btn);
+                }
+            });
+        }
+
+        // --- Logic ---
+        function addInput(text) {
+            const inputId = contentData.experienceType === 'BROWSER' ? 'browser-input' : 'terminal-input';
+            const input = document.getElementById(inputId);
+            let val = input.value;
+            if (val.length > 0 && !val.endsWith(' ')) val += ' ';
+            input.value = val + text;
+            input.focus();
+        }
+        function resetInput() {
+            const inputId = contentData.experienceType === 'BROWSER' ? 'browser-input' : 'terminal-input';
+            document.getElementById(inputId).value = '';
+            document.getElementById(inputId).focus();
+        }
+        function toggleAnswer() {
+            const area = document.getElementById('answer-area');
+            area.style.display = (area.style.display === 'block') ? 'none' : 'block';
+        }
+
+        const outputHistory = document.getElementById('output-history');
+        const codeSection = document.getElementById('secret-code-section');
+
+        function checkInput() {
+            const isBrowser = (contentData.experienceType === 'BROWSER');
+            const inputId = isBrowser ? 'browser-input' : 'terminal-input';
+            const input = document.getElementById(inputId);
+            const val = input.value.trim();
+            if (!val) return;
+
+            const normalize = s => s.replace(/\s+/g, '').replace(/'/g, '"');
+            const target = contentData.targetCommand || "IMPOSSIBLE";
+            const normalizedTarget = normalize(target);
+            const isCorrect = normalize(val).includes(normalizedTarget);
+
+            if (isBrowser) {
+                if (isCorrect) {
+                    document.getElementById('fake-alert-overlay').style.display = 'flex';
+                    document.getElementById('alert-msg').textContent = contentData.successMessage;
+                    revealCodeSection();
+                } else { alert("NO EFFECT."); }
+            } else {
+                addLog(`root@box:~# ${val}`, '#fff');
+                setTimeout(() => {
+                    if (isCorrect) {
+                        addLog(`>> SUCCESS: ${contentData.successMessage}`, "var(--term-green)");
+                        revealCodeSection();
+                    } else { addLog(">> ERROR: Command failed.", "var(--alert-color)"); }
+                    // Auto-scroll removed as requested
+                }, 200);
+                input.value = '';
+            }
+        }
+
+        ['terminal-input', 'browser-input'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.addEventListener('keydown', e => { if(e.key === 'Enter') checkInput(); });
+        });
+
+        function addLog(text, color) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            div.style.color = color;
+            div.style.marginBottom = "5px";
+            document.getElementById('output-history').appendChild(div);
+        }
+        function closeAlert() { document.getElementById('fake-alert-overlay').style.display = 'none'; }
+        
+        function revealCodeSection() {
+            if (codeSection) {
+                codeSection.classList.add('visible');
+                // Auto-scroll removed
+            }
+        }
+
+        function checkQuiz(button, isCorrect) {
+            const parent = button.parentElement;
+            if (parent.classList.contains('answered')) return;
+            parent.classList.add('answered');
+            if (isCorrect) {
+                button.style.borderColor = "var(--term-green)";
+                button.style.color = "var(--term-green)";
+                button.style.background = "rgba(0,255,65,0.1)";
+            } else {
+                button.style.borderColor = "var(--alert-color)";
+                button.style.color = "var(--alert-color)";
+                const btns = parent.children;
+                for(let btn of btns) {
+                    if(btn.textContent.includes(`[${contentData.quizData.answer}]`)) {
+                        btn.style.borderColor = "var(--term-green)";
+                        btn.style.color = "var(--term-green)";
+                    }
+                }
+            }
+            document.getElementById('quiz-explanation').style.display = 'block';
+        }
+
+        function resetQuiz() {
+            const optionsBox = document.getElementById('quiz-options-box');
+            if (!optionsBox) return;
+            optionsBox.classList.remove('answered');
+            document.getElementById('quiz-explanation').style.display = 'none';
+            const btns = optionsBox.children;
+            for (let btn of btns) {
+                btn.style.borderColor = "#333";
+                btn.style.color = "#888";
+                btn.style.background = "#111";
+            }
+        }
+
+        // --- Auth & Progress ---
+        document.addEventListener('DOMContentLoaded', function () {
+            const authButton = document.getElementById('auth-button');
+            const token = localStorage.getItem('jwt_token'); 
+            
+            if (token) { 
+                authButton.textContent = 'USER: LOGGED_IN'; 
+                authButton.href = '/mypage'; 
+            } else { 
+                authButton.textContent = 'INIT_SESSION'; 
+                authButton.href = '/login'; 
+            }
+
+            const progressCheck = document.getElementById('progress-check');
+            const progressLabel = document.getElementById('progress-label');
+            let currentVulnId = getJsonFromTag('data-vuln-id');
+            
+            if (!currentVulnId) {
+                const matches = window.location.pathname.match(/\/(\d+)$/);
+                if (matches) currentVulnId = parseInt(matches[1]);
+            }
+
+            // Next Button
+            if (currentVulnId) {
+                fetch('/api/vulnerabilities').then(res => res.json()).then(data => {
+                    if (data.success && data.data.length > 0) {
+                        const allIds = data.data.map(v => v.vuln_id).sort((a,b)=>a-b);
+                        const currentIndex = allIds.indexOf(currentVulnId);
+                        if (currentIndex !== -1) {
+                            let nextIndex = currentIndex + 1;
+                            if (nextIndex >= allIds.length) nextIndex = 0;
+                            const nextId = allIds[nextIndex];
+                            const btn = document.getElementById('next-lesson-bottom');
+                            if (btn) { 
+                                btn.href = `/lesson/${nextId}`; 
+                                btn.style.display = 'inline-block'; 
+                                document.getElementById('next-lesson-top').href = `/lesson/${nextId}`;
+                                document.getElementById('next-lesson-top').style.display = 'inline-flex';
+                            }
+                        }
+                    }
+                });
+            }
+
+            if (token && currentVulnId) {
+                fetch('/api/progress/all', { headers: { 'Authorization': `Bearer ${token}` } })
+                .then(res => res.json()).then(data => {
+                    if (data.success) {
+                        const item = data.data.find(d => d.vuln_id === currentVulnId);
+                        if (item && item.status === 'COMPLETED') {
+                            progressCheck.checked = true;
+                        }
+                    }
+                });
+
+                progressCheck.addEventListener('change', function() {
+                    const isCompleted = this.checked;
+                    fetch('/api/progress/update', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ vuln_id: currentVulnId, completed: isCompleted })
+                    }).then(res => res.json()).then(res => {
+                        if(!res.success) {
+                            alert('DB Error: Save failed.');
+                            this.checked = !isCompleted;
+                        }
+                    });
+                });
+            } else if (progressCheck) {
+                progressCheck.disabled = true;
+            }
+        });
+    </script>
+</body>
+</html>

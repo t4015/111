@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>マイページ | 統合ダッシュボード</title>
+
+    <link rel="stylesheet" href="/static/css/style.css">
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Noto+Sans+JP:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+
+    <style>
+        /* --- マイページ固有のレイアウト調整 --- */
+
+        /* 1. 画面幅を広げる (style.cssの1000pxを上書き) */
+        .dashboard-container {
+            max-width: 1280px !important;
+            width: 95%;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        /* 2. ページ固有のヘッダー */
+        .page-header-simple {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--color-border);
+        }
+        .page-title-text {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--color-text-main);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .logout-btn-page {
+            background-color: transparent;
+            color: var(--color-text-sub);
+            border: 1px solid var(--color-border);
+            padding: 6px 16px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+        .logout-btn-page:hover {
+            background-color: #f3f4f6;
+            color: var(--color-warning);
+            border-color: var(--color-warning);
+        }
+
+        /* 3. 学習状況ヘッダーエリア（カード内埋め込み） */
+        .progress-header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end; /* 右下のグラフ配置のため下揃え */
+            padding-bottom: 30px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        /* 左側の情報エリア */
+        .header-left-content {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .section-headline {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--color-text-main);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-info-block {
+            padding-left: 5px;
+        }
+
+        .user-name-large {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--color-text-main);
+            line-height: 1.2;
+            margin-bottom: 8px;
+        }
+        .user-name-suffix { font-size: 1.2rem; font-weight: normal; color: var(--color-text-sub); margin-left: 5px; }
+
+        .user-meta {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: var(--color-text-sub);
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        /* 右側のグラフエリア */
+        .header-right-content {
+            flex-shrink: 0;
+            margin-left: 40px;
+            text-align: center;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* CSSで作る大きな円グラフ */
+        .donut-chart-large {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background: conic-gradient(var(--color-bg) 0% 100%); /* 初期値 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            box-shadow: var(--shadow-hover);
+        }
+        .donut-chart-large::before {
+            content: "";
+            width: 110px;
+            height: 110px;
+            background: var(--color-surface);
+            border-radius: 50%;
+            position: absolute;
+        }
+        
+        .chart-inner-text {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            line-height: 1;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            color: var(--color-text-sub);
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1rem;
+            padding: 8px 12px;
+            border-radius: 8px; /* var(--border-radius)があればそちらでも可 */
+            transition: all 0.2s;
+            margin-right: 10px; /* 見出しとの間隔 */
+        }
+        .back-link:hover {
+            background-color: #f3f4f6;
+            color: var(--color-primary);
+        }
+
+        .chart-value { font-size: 2.5rem; font-weight: 800; color: var(--color-primary); }
+        .chart-unit { font-size: 1rem; font-weight: 700; color: var(--color-text-sub); margin-top: -5px; }
+        .chart-label-bottom { margin-top: 10px; font-weight: 700; color: var(--color-text-sub); font-size: 0.9rem; }
+
+        /* 4. レイアウトグリッド */
+        .layout-stack { display: flex; flex-direction: column; gap: 30px; }
+        .split-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+
+        /* 5. テーブルスタイル調整 */
+        .progress-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .progress-table th {
+            background-color: var(--color-bg);
+            text-align: left;
+            padding: 15px;
+            border-bottom: 2px solid var(--color-border);
+            color: var(--color-text-sub);
+            font-weight: 700;
+        }
+        .progress-table td {
+            padding: 15px;
+            border-bottom: 1px solid var(--color-border);
+            vertical-align: middle;
+        }
+
+        /* バッジ */
+        .status-badge { padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; display: inline-block; text-align: center; min-width: 90px; }
+        .status-completed { background-color: #e8f5e9; color: #2e7d32; }
+        .status-inprogress { background-color: #fff3e0; color: #ef6c00; }
+        .status-notstarted { background-color: #f5f5f5; color: #757575; }
+
+        /* アクションボタン (btnクラスの派生) */
+        .action-btn {
+            background-color: var(--color-primary); color: white; padding: 8px 20px; text-decoration: none; border-radius: var(--border-radius); font-size: 0.9rem; font-weight: 700; display: inline-block; transition: background 0.2s;
+        }
+        .action-btn:hover { background-color: var(--color-primary-dark); color: white; text-decoration: none;}
+
+        /* レスポンシブ */
+        @media (max-width: 768px) {
+            .progress-header-container { flex-direction: column; align-items: flex-start; gap: 30px; }
+            .header-right-content { align-self: center; margin-left: 0; }
+            .split-grid { grid-template-columns: 1fr; }
+            .progress-table th:nth-child(2), .progress-table td:nth-child(2) { display: none; }
+        }
+
+        /* その他ユーティリティ */
+        .loading-overlay { z-index: 9999; }
+        .admin-menu { display: none; background-color: #fff8e1; border: 2px solid #ffecb3; border-radius: var(--border-radius); padding: 15px 20px; margin-bottom: 30px; color: #5d4037;}
+        .admin-menu h2 { margin: 0 0 10px 0; font-size: 1.2rem; color: #f57f17; display: flex; align-items: center; gap: 8px; }
+        .btn-admin { background-color: #ff6f00; color: white; padding: 8px 16px; border-radius: 4px; text-decoration: none; font-weight: bold; display: inline-flex; align-items: center; gap: 5px; }
+    </style>
+</head>
+
+<body>
+
+    <div id="loading-overlay" class="loading-overlay">
+        <span class="material-icons-round" style="font-size: 3rem; margin-bottom: 15px; color: var(--color-primary);">hourglass_empty</span>
+        <span>Loading...</span>
+    </div>
+
+    {% include "components/header.html" %}
+
+    <div class="dashboard-container">
+
+        <div class="page-header-simple">
+            <div style="display: flex; align-items: center;">
+                <a href="/" class="back-link">
+                    <span class="material-icons-round">arrow_back</span>
+                    一覧へ
+                </a>
+                <h1 class="page-title-text">
+                    マイページ
+                </h1>
+            </div>
+
+            <button id="page-logout-button" class="logout-btn-page">
+                <span class="material-icons-round" style="font-size: 1.1rem;">logout</span>
+                ログアウト
+            </button>
+        </div>
+
+        <div id="message-area" class="message-area"></div>
+
+        <section class="admin-menu" id="admin-menu">
+            <h2><span class="material-icons-round">admin_panel_settings</span>管理者メニュー</h2>
+            <p style="font-size:0.9rem; margin-bottom:10px;">管理者権限（ADMIN）でログイン中</p>
+            <a href="/admin_dashboard" class="btn-admin">ダッシュボードへ<span class="material-icons-round">arrow_forward</span></a>
+        </section>
+
+        <div class="layout-stack">
+
+            <div class="ud-card" style="padding: 30px; flex-direction: column; align-items: stretch;">
+                
+                <div class="progress-header-container">
+                    
+                    <div class="header-left-content">
+                        <h1 class="section-headline">
+                            <span class="material-icons-round" style="color: var(--color-primary); font-size: 1.2em;">school</span>
+                            学習コンテンツ一覧
+                        </h1>
+
+                        <div class="user-info-block">
+                            <div class="user-name-large">
+                                <span id="profile-display-name">User</span>
+                                <span class="user-name-suffix">さん</span>
+                            </div>
+                            <div class="user-meta">
+                                <span class="material-icons-round" style="font-size: 1.1rem; color: var(--color-text-sub);">calendar_today</span>
+                                登録日: <span id="profile-created-at">----/--/--</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="header-right-content">
+                        <div class="chart-wrapper">
+                            <div class="donut-chart-large" id="status-donut-chart">
+                                <div class="chart-inner-text">
+                                    <span class="chart-value" id="total-progress-value">0</span>
+                                    <span class="chart-unit">%</span>
+                                </div>
+                            </div>
+                            <div class="chart-label-bottom">コンプリート率</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="overflow-x: auto;">
+                    <table class="progress-table">
+                        <thead>
+                            <tr>
+                                <th>コンテンツ名</th>
+                                <th>ステータス</th>
+                                <th style="text-align: right;">アクション</th>
+                            </tr>
+                        </thead>
+                        <tbody id="progress-list">
+                            <tr><td colspan="3" style="text-align:center; padding:30px; color: #aaa;">データを読み込んでいます...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="ud-card" style="display: block;">
+                <h2 class="card-title" style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                    <span class="material-icons-round" style="color: var(--color-primary);">manage_accounts</span>
+                    基本設定
+                </h2>
+                <form id="account-settings-form">
+                    <div style="display: flex; gap: 30px; flex-wrap: wrap;">
+                        <div class="form-group" style="flex: 1; min-width: 250px;">
+                            <label for="email">メールアドレス</label>
+                            <input type="email" id="email" name="email" readonly value="..." style="background-color: var(--color-bg); color: #666;">
+                        </div>
+                        <div class="form-group" style="flex: 1; min-width: 250px;">
+                            <label for="display_name">表示名 (ニックネーム)</label>
+                            <input type="text" id="display_name" name="display_name" required value="..." maxlength="50">
+                        </div>
+                    </div>
+                    <div style="text-align: right; margin-top: 10px;">
+                        <button type="submit" class="btn" id="update-profile-button" style="width: auto; min-width: 150px;">更新する</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="split-grid">
+                <div class="ud-card" style="display: block;">
+                    <h2 class="card-title" style="margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                        <span class="material-icons-round" style="color: var(--color-primary);">mail</span>
+                        メールアドレス変更
+                    </h2>
+                    <p style="font-size: 0.85rem; color: var(--color-text-sub); margin-bottom: 20px;">
+                        ※変更には現在のパスワードが必要です。
+                    </p>
+                    <form id="email-change-form">
+                        <div class="form-group">
+                            <label for="new_email">新しいメールアドレス</label>
+                            <input type="email" id="new_email" name="new_email" placeholder="example@mail.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="current_password_for_email">現在のパスワード <span style="color: var(--color-accent);">*</span></label>
+                            <input type="password" id="current_password_for_email" name="current_password" required>
+                        </div>
+                        <div id="email-message" class="message-box" style="margin-bottom: 15px;"></div>
+                        <button type="submit" class="btn" id="email-change-btn">変更する</button>
+                    </form>
+                </div>
+
+                <div class="ud-card" style="display: block;">
+                    <h2 class="card-title" style="margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                        <span class="material-icons-round" style="color: var(--color-primary);">lock</span>
+                        パスワード変更
+                    </h2>
+                    <p style="font-size: 0.85rem; color: var(--color-text-sub); margin-bottom: 20px; visibility: hidden;">spacer</p>
+                    <form id="password-change-form">
+                        <div class="form-group">
+                            <label for="current_password">現在のパスワード</label>
+                            <input type="password" id="current_password" name="current_password" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="new_password">新しいパスワード</label>
+                            <input type="password" id="new_password" name="new_password" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirm_password">確認用</label>
+                            <input type="password" id="confirm_password" name="confirm_password" required>
+                        </div>
+                        <button type="submit" class="btn" id="update-password-button">変更する</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>&copy; 2025 セキュリティ学習ポータル | <a href="/contact">お問い合わせ</a></p>
+    </footer>
+
+    <script>
+        function escapeHtml(unsafe) { if (typeof unsafe !== 'string') return unsafe; return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
+        const token = localStorage.getItem('access_token');
+        const pageLogoutButton = document.getElementById('page-logout-button');
+        const messageArea = document.getElementById('message-area');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const adminMenu = document.getElementById('admin-menu');
+        const progressListEl = document.getElementById('progress-list');
+        const statusDonutChart = document.getElementById('status-donut-chart');
+        const totalProgressValue = document.getElementById('total-progress-value');
+        const profileDisplayNameEl = document.getElementById('profile-display-name');
+        const profileCreatedAtEl = document.getElementById('profile-created-at');
+
+        function showMessage(message, type = 'success') {
+            if (!messageArea) return;
+            messageArea.textContent = message;
+            messageArea.className = `message-area ${type === 'success' ? 'message-success' : 'message-error'}`;
+            messageArea.style.display = 'block';
+            window.scrollTo(0, 0);
+            setTimeout(() => { messageArea.style.display = 'none'; }, 4000);
+        }
+
+        function handleLogout() {
+            if (!confirm('ログアウトしますか？')) return;
+            if (token) { fetch('/api/logout', { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } }).finally(() => { localStorage.removeItem('access_token'); window.location.href = '/login'; }); }
+            else { localStorage.removeItem('access_token'); window.location.href = '/login'; }
+        }
+
+        (function () {
+            setTimeout(() => { if (loadingOverlay && loadingOverlay.style.display !== 'none') { loadingOverlay.style.opacity = '0'; setTimeout(() => { loadingOverlay.style.display = 'none'; }, 300); } }, 2000);
+            if (token) {
+                if (pageLogoutButton) pageLogoutButton.addEventListener('click', handleLogout);
+                Promise.all([fetchUserData(), fetchProgressData()]).finally(() => { if (loadingOverlay) { loadingOverlay.style.opacity = '0'; setTimeout(() => { loadingOverlay.style.display = 'none'; }, 300); } });
+            } else { window.location.href = '/login'; }
+        })();
+
+        function fetchUserData() {
+            return fetch('/api/me', { method: 'GET', headers: { 'Authorization': `Bearer ${token}` } })
+            .then(res => { if (res.status === 401) throw new Error('認証切れ'); return res.json(); })
+            .then(result => {
+                if (result.success) {
+                    const user = result.user;
+                    if(document.getElementById('email')) document.getElementById('email').value = user.email;
+                    if(document.getElementById('display_name')) document.getElementById('display_name').value = user.display_name;
+                    if(profileDisplayNameEl) profileDisplayNameEl.textContent = user.display_name;
+                    if(profileCreatedAtEl) profileCreatedAtEl.textContent = user.created_at || "----/--/--";
+                    if(user.role === 'ADMIN' && adminMenu) adminMenu.style.display = 'block';
+                }
+            }).catch(err => { if (err.message === '認証切れ') { localStorage.removeItem('access_token'); window.location.href = '/login'; } });
+        }
+
+        function fetchProgressData() {
+            return fetch('/api/progress/all', { method: 'GET', headers: { 'Authorization': `Bearer ${token}`, 'Cache-Control': 'no-cache' } })
+            .then(res => res.json())
+            .then(result => { if (result.success) renderProgressTable(result.data); else if (progressListEl) progressListEl.innerHTML = '<tr><td colspan="3" style="text-align:center;">エラー</td></tr>'; }).catch(console.error);
+        }
+
+        function renderProgressTable(data) {
+            if (!progressListEl) return;
+            if (!data || data.length === 0) { progressListEl.innerHTML = '<tr><td colspan="3" style="text-align:center; padding: 30px;">学習コンテンツがありません。</td></tr>'; return; }
+            progressListEl.innerHTML = '';
+            let completedCount = 0;
+            data.forEach(item => {
+                const tr = document.createElement('tr');
+                let badgeHtml = '';
+                if (item.status === 'COMPLETED') { badgeHtml = '<span class="status-badge status-completed">完了</span>'; completedCount++; }
+                else if (item.status === 'IN_PROGRESS') { badgeHtml = '<span class="status-badge status-inprogress">学習中</span>'; }
+                else { badgeHtml = '<span class="status-badge status-notstarted">未着手</span>'; }
+                tr.innerHTML = `<td><strong>${escapeHtml(item.vuln_name)}</strong></td><td>${badgeHtml}</td><td style="text-align: right;"><a href="/lesson/${item.vuln_id}" class="action-btn">学習する</a></td>`;
+                progressListEl.appendChild(tr);
+            });
+            if (statusDonutChart && totalProgressValue) {
+                const percent = Math.round((completedCount / data.length) * 100);
+                totalProgressValue.textContent = percent;
+                const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || '#0056b3';
+                const bgColor = getComputedStyle(document.documentElement).getPropertyValue('--color-border').trim() || '#e5e7eb';
+                statusDonutChart.style.background = `conic-gradient(${primaryColor} 0% ${percent}%, ${bgColor} ${percent}% 100%)`;
+            }
+        }
+
+        if(document.getElementById('account-settings-form')) {
+            document.getElementById('account-settings-form').addEventListener('submit', function(e) { e.preventDefault(); 
+                const btn = document.getElementById('update-profile-button'); btn.disabled = true; btn.textContent = '...';
+                fetch('/api/update_profile', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ display_name: document.getElementById('display_name').value }) })
+                .then(res => res.json()).then(res => { if (res.success) { showMessage('更新しました', 'success'); if(profileDisplayNameEl) profileDisplayNameEl.textContent = document.getElementById('display_name').value; } else showMessage(res.message, 'error'); })
+                .finally(() => { btn.disabled = false; btn.textContent = '更新する'; });
+            });
+        }
+        if(document.getElementById('password-change-form')) {
+            document.getElementById('password-change-form').addEventListener('submit', function(e) { e.preventDefault(); 
+                const newPw = document.getElementById('new_password').value; const confirmPw = document.getElementById('confirm_password').value;
+                if(newPw !== confirmPw) return showMessage('不一致', 'error'); if(newPw.length < 6) return showMessage('短すぎます', 'error');
+                const btn = document.getElementById('update-password-button'); btn.disabled = true; btn.textContent = '...';
+                fetch('/api/change_password', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ current_password: document.getElementById('current_password').value, new_password: newPw }) })
+                .then(res => res.json()).then(res => { if (res.success) { showMessage('変更しました', 'success'); e.target.reset(); } else showMessage(res.message, 'error'); })
+                .finally(() => { btn.disabled = false; btn.textContent = '変更する'; });
+            });
+        }
+        if(document.getElementById('email-change-form')) {
+            document.getElementById('email-change-form').addEventListener('submit', function(e) { e.preventDefault();
+                const btn = document.getElementById('email-change-btn'); const msg = document.getElementById('email-message');
+                btn.disabled = true; btn.textContent = '...'; msg.style.display = 'none';
+                fetch('/api/update_email', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ new_email: document.getElementById('new_email').value, current_password: document.getElementById('current_password_for_email').value }) })
+                .then(res => res.json()).then(res => { msg.style.display = 'block'; msg.textContent = res.message; if(res.success) { msg.style.backgroundColor = '#d4edda'; msg.style.color = '#155724'; document.getElementById('new_email').value = ''; document.getElementById('current_password_for_email').value = ''; } else { msg.style.backgroundColor = '#f8d7da'; msg.style.color = '#721c24'; } })
+                .finally(() => { btn.disabled = false; btn.textContent = '変更する'; });
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,353 @@
+/* =========================================
+   1. 基本設定 (Variables & Base)
+   ========================================= */
+   :root {
+    /* カラーパレット */
+    --color-bg: #f9fafb;
+    --color-surface: #ffffff;
+    --color-text-main: #333333;
+    --color-text-sub: #555555;
+    --color-border: #e5e7eb;
+    
+    --color-primary: #0056b3;
+    --color-primary-dark: #004494;
+    --color-accent: #d32f2f;
+    --color-success: #2e7d32;
+    --color-warning: #ed6c02;
+    
+    /* レイアウト変数 */
+    --border-radius: 8px;
+    --shadow-card: 0 2px 4px rgba(0,0,0,0.05);
+    --shadow-float: 0 6px 12px rgba(0,0,0,0.08);
+    --shadow-hover: 0 4px 12px rgba(0,0,0,0.1);
+    --focus-ring: 0 0 0 3px rgba(0, 86, 179, 0.4);
+    
+    --font-base: "BIZ UDPGothic", "Noto Sans JP", sans-serif;
+}
+
+body {
+    font-family: var(--font-base);
+    background-color: var(--color-bg);
+    color: var(--color-text-main);
+    margin: 0;
+    padding: 0;
+    line-height: 1.7;
+    font-size: 16px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* アクセシビリティ対応 */
+*:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+button, a { cursor: pointer; touch-action: manipulation; }
+
+/* リンク共通 */
+a { color: var(--color-primary); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+
+/* =========================================
+   2. ヘッダー & フッター
+   ========================================= */
+.ud-header, .common-header {
+    background-color: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    padding: 15px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.site-logo a, .header-title a {
+    font-size: 1.25rem; font-weight: 700; color: var(--color-text-main);
+    text-decoration: none; display: flex; align-items: center; gap: 10px;
+}
+.site-logo .icon { color: var(--color-primary); font-size: 1.5rem; }
+
+.header-btn, .user-menu a {
+    font-size: 0.95rem; font-weight: 700; color: var(--color-surface);
+    background-color: var(--color-primary); padding: 8px 16px;
+    border-radius: var(--border-radius); text-decoration: none;
+    display: inline-flex; align-items: center; gap: 8px;
+    transition: background-color 0.2s;
+    border: none;
+}
+.header-btn:hover { background-color: var(--color-primary-dark); text-decoration: none; }
+
+footer {
+    text-align: center; padding: 40px 20px;
+    background-color: var(--color-surface); border-top: 1px solid var(--color-border);
+    margin-top: auto; /* フッターを最下部に押し下げる */
+    color: var(--color-text-sub);
+}
+
+
+/* =========================================
+   3. レイアウトコンテナ
+   ========================================= */
+.main-wrapper, .dashboard-container, main {
+    max-width: 1000px;
+    margin: 40px auto;
+    padding: 0 20px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+
+/* =========================================
+   4. フォーム & ログイン画面 (ここが不足していました！)
+   ========================================= */
+.login-container {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-float);
+    padding: 40px;
+    width: 100%;
+    max-width: 480px; /* 少し広めに */
+    margin: 40px auto; /* 上下中央寄せ用 */
+    box-sizing: border-box;
+}
+
+.login-title, .page-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--color-text-main);
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 30px;
+}
+
+.page-description {
+    text-align: center;
+    color: var(--color-text-sub);
+    margin-bottom: 25px;
+}
+
+/* フォーム部品 */
+.form-group { margin-bottom: 20px; }
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 700;
+    color: var(--color-text-sub);
+}
+
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="password"],
+.form-group textarea {
+    width: 100%;
+    padding: 12px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+}
+
+.form-group input:focus, .form-group textarea:focus {
+    border-color: var(--color-primary);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.1);
+}
+
+/* ボタン */
+.login-button, .btn, .primary-button {
+    width: 100%;
+    padding: 12px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: white;
+    background-color: var(--color-primary);
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: background-color 0.2s;
+    text-align: center;
+    display: inline-block;
+    box-sizing: border-box;
+}
+
+.login-button:hover, .btn:hover { background-color: var(--color-primary-dark); text-decoration: none; }
+.login-button:disabled, .btn:disabled { background-color: #bdc3c7; cursor: not-allowed; }
+
+/* リンク集 */
+.form-links {
+    margin-top: 25px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.95rem;
+}
+
+.extra-link { text-align: center; margin-top: 25px; font-size: 0.95rem; }
+
+
+/* =========================================
+   5. メッセージエリア (成功・エラー)
+   ========================================= */
+.message-area, .error-message, .message-box {
+    display: none; 
+    padding: 15px;
+    border-radius: var(--border-radius);
+    margin-bottom: 20px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.message-success, .message-box.success {
+    background-color: #dff0d8;
+    border: 1px solid #d6e9c6;
+    color: #3c763d;
+}
+
+.message-error, .error-message, .message-box.error {
+    background-color: #f2dede;
+    border: 1px solid #ebccd1;
+    color: #a94442;
+}
+
+
+/* =========================================
+   6. コンポーネント (カード、ヒーロー)
+   ========================================= */
+.hero-section {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    padding: 40px;
+    margin-bottom: 40px;
+    text-align: center;
+    box-shadow: var(--shadow-card);
+}
+
+.hero-title { font-size: 2rem; font-weight: 700; margin-bottom: 15px; }
+.hero-title span { color: var(--color-primary); }
+
+.content-card, .ud-card {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    padding: 25px;
+    box-shadow: var(--shadow-card);
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    text-decoration: none;
+    color: var(--color-text-main);
+}
+
+.content-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+    border-color: var(--color-primary);
+}
+
+.card-title { font-size: 1.25rem; font-weight: 700; margin: 0; }
+.chapter-label { font-size: 0.85rem; font-weight: 700; color: var(--color-text-sub); text-transform: uppercase; margin-bottom: 5px; }
+
+/* カード内のアイコン */
+.card-left { display: flex; align-items: center; gap: 20px; }
+.card-icon {
+    background-color: #e0f2fe; color: var(--color-primary);
+    width: 50px; height: 50px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem; flex-shrink: 0;
+}
+.card-arrow { font-size: 1.5rem; color: var(--color-text-sub); transition: 0.2s; }
+.content-card:hover .card-arrow { color: var(--color-primary); transform: translateX(5px); }
+
+.vulnerability-list { list-style: none; padding: 0; display: grid; gap: 20px; }
+
+
+/* =========================================
+   7. アカウント作成・MFA画面用のスタイル
+   ========================================= */
+.password-strength-meter {
+    height: 5px; background-color: #eee; border-radius: 5px; margin-top: 10px; overflow: hidden;
+}
+.password-strength-bar { height: 100%; width: 0%; transition: width 0.3s; }
+.strength-weak { background-color: var(--color-accent); }
+.strength-medium { background-color: var(--color-warning); }
+.strength-strong { background-color: var(--color-success); }
+.password-feedback { font-size: 0.9em; margin-top: 5px; color: var(--color-text-sub); height: 1.5em; }
+
+.turnstile-container { margin-bottom: 20px; display: flex; justify-content: center; }
+
+/* MFA ステップ */
+.qr-code-section { display: none; text-align: left; }
+.mfa-steps { list-style: none; padding-left: 0; margin-top: 20px; }
+.mfa-steps li { position: relative; padding-left: 45px; margin-bottom: 20px; }
+.step-number {
+    position: absolute; left: 0; top: 0;
+    width: 30px; height: 30px;
+    background-color: var(--color-primary); color: white;
+    font-weight: bold; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+}
+.step-content { font-weight: bold; display: block; margin-bottom: 5px; }
+.qr-code-container { text-align: center; margin: 20px 0; }
+#qr-code-image { max-width: 200px; border: 5px solid #ecf0f1; border-radius: 8px; }
+
+
+/* =========================================
+   8. モーダル (利用規約など)
+   ========================================= */
+.modal {
+    display: none;
+    position: fixed; z-index: 2000;
+    left: 0; top: 0; width: 100%; height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    overflow: auto;
+}
+.modal-content {
+    background-color: #fff;
+    margin: 5% auto; padding: 30px;
+    border-radius: 10px; width: 80%; max-width: 800px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    position: relative;
+    display: flex; flex-direction: column;
+    max-height: 90vh;
+}
+.terms-content {
+    overflow-y: auto; max-height: 60vh;
+    padding-right: 15px; border-bottom: 1px solid #eee; margin-bottom: 20px;
+}
+.close-button {
+    position: absolute; top: 10px; right: 20px;
+    font-size: 28px; font-weight: bold; color: #aaa; cursor: pointer;
+}
+.close-button:hover { color: #333; }
+.modal-button {
+    align-self: flex-end;
+    background-color: var(--color-primary); color: white;
+    border: none; padding: 10px 20px; border-radius: 5px;
+    cursor: pointer;
+}
+
+/* チェックボックス周り */
+.agreement-item { margin-bottom: 10px; }
+.agreement-label { display: flex; align-items: center; cursor: pointer; }
+.agreement-label input { margin-right: 10px; transform: scale(1.2); }
+.agreement-text a { font-weight: bold; color: var(--color-primary); text-decoration: underline; margin-right: 5px; }
+
+
+/* =========================================
+   9. レスポンシブ対応
+   ========================================= */
+@media (max-width: 600px) {
+    .ud-header, .common-header { flex-direction: column; padding: 15px; }
+    .content-card { padding: 20px; }
+    .card-icon { width: 40px; height: 40px; font-size: 1.2rem; }
+    .card-title { font-size: 1.1rem; }
+    .login-container { padding: 25px; }
+}

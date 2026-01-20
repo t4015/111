@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ content_title }} - セキュリティ学習ポータル</title>
+    <!-- 読みやすいUDフォントとアイコン -->
+    <link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* ユニバーサルデザインカラーパレット */
+            --color-bg: #f9fafb;       /* 背景: 薄いグレー */
+            --color-surface: #ffffff;  /* カード背景: 白 */
+            --color-text-main: #333333; /* 文字: 濃いグレー */
+            --color-text-sub: #555555;
+            --color-border: #e5e7eb;
+            
+            --color-primary: #0056b3;  /* 青: リンク・メインアクション (色覚多様性に配慮) */
+            --color-primary-dark: #004494;
+            --color-accent: #d32f2f;   /* 赤: エラー・強調 */
+            --color-success: #2e7d32;  /* 緑: 成功・完了 */
+            --color-warning: #ed6c02;  /* オレンジ: 注意・ヒント */
+            
+            --border-radius: 8px;
+            --shadow-card: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+            --focus-ring: 0 0 0 3px rgba(0, 86, 179, 0.4); /* フォーカス時の枠線 */
+            
+            --font-base: "BIZ UDPGothic", "Noto Sans JP", "Hiragino Kaku Gothic ProN", sans-serif;
+            --font-mono: "BIZ UDGothic", "Consolas", monospace;
+        }
+
+        body {
+            font-family: var(--font-base);
+            background-color: var(--color-bg);
+            color: var(--color-text-main);
+            margin: 0;
+            padding: 0;
+            line-height: 1.7;
+            font-size: 16px;
+        }
+
+        /* アクセシビリティ対応リセット */
+        *:focus-visible {
+            outline: none;
+            box-shadow: var(--focus-ring);
+        }
+        
+        button, a {
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+
+        /* --- ヘッダー --- */
+        .ud-header {
+            background-color: var(--color-surface);
+            border-bottom: 1px solid var(--color-border);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .site-logo a {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--color-text-main);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .site-logo .icon { color: var(--color-primary); font-size: 1.5rem; }
+
+        .header-btn {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--color-surface);
+            background-color: var(--color-primary);
+            padding: 10px 20px;
+            border-radius: var(--border-radius);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: background-color 0.2s;
+        }
+        .header-btn:hover { background-color: var(--color-primary-dark); }
+
+        /* --- メインコンテンツ --- */
+        .main-wrapper {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        /* ナビゲーション */
+        .breadcrumb-nav {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .nav-link {
+            display: inline-flex;
+            align-items: center;
+            color: var(--color-text-sub);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 8px 12px;
+            border: 1px solid var(--color-border);
+            border-radius: var(--border-radius);
+            background: #fff;
+            transition: all 0.2s;
+        }
+        .nav-link:hover {
+            background-color: #f3f4f6;
+            color: var(--color-text-main);
+            border-color: #d1d5db;
+        }
+        .nav-link .icon { margin-right: 5px; font-size: 1.2rem; }
+        
+        .next-link {
+            background-color: var(--color-primary);
+            color: #fff;
+            border-color: var(--color-primary);
+        }
+        .next-link:hover {
+            background-color: var(--color-primary-dark);
+            color: #fff;
+        }
+        .next-link .icon { margin-left: 5px; margin-right: 0; }
+
+        /* グリッドレイアウト (調整済み) */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr; /* 左右のバランスを調整 */
+            gap: 30px;
+            margin-bottom: 40px;
+            align-items: start; /* 上揃えで固定 */
+        }
+        @media (max-width: 900px) {
+            .content-grid { grid-template-columns: 1fr; }
+        }
+
+        /* --- カード --- */
+        .ud-card {
+            background-color: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-card);
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            background-color: #f3f4f6;
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--color-border);
+            font-weight: 700;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--color-text-main);
+        }
+        .card-body {
+            padding: 20px;
+        }
+
+        /* --- コンテンツ --- */
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            background: #000;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .video-container iframe {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        }
+
+        .lesson-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .lesson-title {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 700;
+            line-height: 1.4;
+            color: var(--color-text-main);
+        }
+
+        .lesson-description {
+            font-size: 1rem;
+            color: var(--color-text-main);
+            margin-bottom: 20px;
+        }
+
+        /* UDチェックボックス */
+        .ud-checkbox {
+            display: inline-flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 8px 16px;
+            border: 2px solid var(--color-border);
+            border-radius: 30px;
+            transition: all 0.2s;
+            user-select: none;
+            background-color: #fff;
+            flex-shrink: 0; /* 縮まないようにする */
+        }
+        .ud-checkbox:hover { background-color: #f9fafb; border-color: #d1d5db; }
+        .ud-checkbox:focus-within { box-shadow: var(--focus-ring); border-color: var(--color-primary); }
+        
+        .ud-checkbox input {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 20px; height: 20px;
+            border: 2px solid var(--color-text-sub);
+            border-radius: 4px;
+            margin-right: 10px;
+            position: relative;
+            background: #fff;
+        }
+        
+        .ud-checkbox input:checked {
+            background-color: var(--color-success);
+            border-color: var(--color-success);
+        }
+        .ud-checkbox input:checked::after {
+            content: '✔';
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            font-size: 14px;
+        }
+        
+        .ud-checkbox-label {
+            font-weight: 700;
+            color: var(--color-text-sub);
+        }
+        .ud-checkbox input:checked ~ .ud-checkbox-label {
+            color: var(--color-success);
+        }
+
+        /* --- パズル (レイアウト保護) --- */
+        .puzzle-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;
+            flex-wrap: wrap; gap: 10px;
+        }
+        .puzzle-actions button {
+            background: #fff; border: 1px solid var(--color-border); padding: 6px 12px; border-radius: 4px;
+            font-size: 0.9rem; color: var(--color-text-sub); margin-left: 8px; font-weight: 500;
+        }
+        .puzzle-actions button:hover { background-color: #f3f4f6; color: var(--color-text-main); }
+
+        .word-bank {
+            display: flex; flex-wrap: wrap; gap: 10px; min-height: 50px;
+            padding: 15px; background-color: #f3f4f6; border-radius: 6px; border: 1px dashed #d1d5db;
+            align-content: flex-start; /* コンテンツを上寄せ */
+        }
+        
+        .word-chip {
+            background-color: #fff;
+            border: 2px solid var(--color-primary);
+            color: var(--color-primary-dark);
+            padding: 8px 12px; /* 少しコンパクトに */
+            border-radius: 6px;
+            font-weight: 700;
+            font-family: var(--font-mono);
+            cursor: pointer;
+            transition: background-color 0.2s;
+            font-size: 0.95rem;
+        }
+        .word-chip:hover { background-color: #e0f2fe; }
+        .word-chip:focus { box-shadow: var(--focus-ring); }
+
+        .answer-feedback {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #fff3e0;
+            border-left: 4px solid var(--color-warning);
+            border-radius: 4px;
+            display: none;
+            word-break: break-all; /* 長いコマンドで崩れないように */
+        }
+        .answer-feedback strong { color: #e65100; }
+
+        /* --- ウィンドウ (サイズ調整) --- */
+        .window-frame {
+            border: 2px solid var(--color-text-main);
+            border-radius: 6px;
+            overflow: hidden;
+            background: #fff;
+            display: flex; flex-direction: column;
+            height: 480px; /* ★ 高さを少し抑える */
+        }
+        
+        .window-title-bar {
+            background: var(--color-text-main); color: #fff; padding: 10px 15px;
+            font-weight: 700; font-size: 0.95rem;
+            display: flex; justify-content: space-between; align-items: center;
+            flex-shrink: 0; /* タイトルバーが縮まないように */
+        }
+        .window-status { font-size: 0.8rem; background: #555; padding: 2px 8px; border-radius: 4px; }
+
+        /* Terminal */
+        .terminal-content {
+            background-color: #1a1a1a; color: #f0f0f0;
+            padding: 15px; font-family: var(--font-mono); font-size: 1.05rem;
+            flex-grow: 1; overflow-y: auto;
+        }
+        .prompt { color: #4caf50; margin-right: 8px; font-weight: bold; }
+        .input-line { display: flex; margin-top: 5px; }
+        #terminal-input {
+            flex-grow: 1; background: transparent; border: none; color: #fff;
+            font-family: inherit; font-size: inherit; outline: none;
+        }
+
+        /* Browser */
+        .browser-toolbar {
+            background: #f3f4f6; border-bottom: 1px solid #d1d5db; padding: 10px;
+            display: flex; gap: 10px; align-items: center;
+            flex-shrink: 0;
+        }
+        .url-bar {
+            flex-grow: 1; background: #fff; border: 1px solid #9ca3af; padding: 8px 12px;
+            border-radius: 4px; font-family: sans-serif; color: var(--color-text-main);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .browser-content {
+            flex-grow: 1; padding: 30px; text-align: center; position: relative;
+            overflow-y: auto;
+        }
+        .fake-logo { font-size: 2rem; font-weight: 900; color: var(--color-text-main); margin-bottom: 20px; }
+        .search-form { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+        .search-input {
+            padding: 10px; width: 70%; min-width: 200px;
+            border: 2px solid var(--color-text-sub); border-radius: 4px; font-size: 1rem;
+        }
+        .search-btn {
+            padding: 10px 20px; background: var(--color-text-main); color: #fff; border: none;
+            border-radius: 4px; font-weight: bold; cursor: pointer;
+        }
+
+        /* アラート */
+        .alert-modal-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center;
+            z-index: 50;
+        }
+        .alert-box {
+            background: #fff; border: 3px solid var(--color-accent);
+            padding: 30px; width: 80%; max-width: 300px; text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2); border-radius: 8px;
+        }
+        .alert-title {
+            color: var(--color-accent); font-size: 1.4rem; margin-bottom: 15px;
+            display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: bold;
+        }
+        .alert-btn {
+            margin-top: 20px; padding: 10px 25px; background: var(--color-accent); color: #fff;
+            border: none; font-weight: bold; font-size: 1rem; cursor: pointer; border-radius: 4px;
+        }
+
+        /* --- コード解析 --- */
+        .code-viewer {
+            display: none; background: #2d2d2d; color: #f8f8f2;
+        }
+        .code-viewer.visible { display: block; }
+        
+        .code-columns { display: flex; border-top: 1px solid #555; }
+        .code-col { flex: 1; padding: 15px; border-right: 1px solid #555; overflow: hidden; }
+        .code-col:last-child { border-right: none; }
+        
+        .col-label {
+            display: inline-block; padding: 4px 8px; border-radius: 4px;
+            font-size: 0.85rem; font-weight: 700; margin-bottom: 10px;
+        }
+        .label-bad { background: var(--color-accent); color: #fff; }
+        .label-good { background: var(--color-success); color: #fff; }
+        
+        pre { margin: 0; overflow-x: auto; font-family: var(--font-mono); line-height: 1.5; white-space: pre-wrap; word-break: break-all; }
+
+        /* --- クイズ (全幅表示) --- */
+        .quiz-container-full {
+            margin-top: 0;
+        }
+        .quiz-title {
+            font-size: 1.2rem; margin-bottom: 20px; font-weight: 700;
+        }
+        
+        .quiz-options {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+        }
+        @media (max-width: 600px) { .quiz-options { grid-template-columns: 1fr; } }
+
+        .quiz-choice {
+            background: #fff; border: 2px solid var(--color-border); padding: 20px;
+            border-radius: 8px; cursor: pointer; text-align: left; font-weight: 500;
+            transition: all 0.2s; display: flex; align-items: center; gap: 15px;
+            font-size: 1rem;
+        }
+        .quiz-choice:hover { border-color: var(--color-primary); background: #f0f9ff; }
+        .quiz-choice:focus { border-color: var(--color-primary); box-shadow: var(--focus-ring); }
+        
+        .choice-marker {
+            width: 30px; height: 30px; border: 2px solid #9ca3af; border-radius: 50%;
+            flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+            font-weight: bold; color: #6b7280; background: #fff;
+        }
+
+        .quiz-explanation {
+            margin-top: 25px; padding: 20px; background-color: #e8f5e9;
+            border: 1px solid #c8e6c9; border-radius: 8px; display: none;
+        }
+        .explanation-title { color: var(--color-success); font-weight: 700; margin-bottom: 10px; font-size: 1.1rem; }
+        .retry-btn {
+            margin-top: 15px; padding: 8px 16px; background: #fff; border: 1px solid var(--color-border);
+            border-radius: 4px; cursor: pointer; font-weight: 500;
+        }
+
+        /* --- フッター --- */
+        footer {
+            text-align: center; padding: 40px 20px;
+            background: var(--color-surface); border-top: 1px solid var(--color-border);
+            margin-top: 60px; color: var(--color-text-sub);
+        }
+        
+        /* 次へ進むボタン (下部) */
+        .bottom-nav {
+            text-align: right; margin-top: 30px;
+        }
+        .bottom-next-btn {
+            display: inline-flex; align-items: center; gap: 10px;
+            background: var(--color-primary); color: #fff;
+            padding: 14px 35px; border-radius: 50px; text-decoration: none;
+            font-weight: 700; font-size: 1.1rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.15); transition: 0.2s;
+        }
+        .bottom-next-btn:hover { background: var(--color-primary-dark); transform: translateY(-2px); box-shadow: 0 6px 8px rgba(0,0,0,0.15); }
+
+    </style>
+</head>
+<body>
+    
+    <!-- データ受け渡し (非表示) -->
+    <script id="data-video-id" type="application/json">{{ video_id | tojson | safe }}</script>
+    <script id="data-target" type="application/json">{{ target_keyword | tojson | safe }}</script>
+    <script id="data-success" type="application/json">{{ success_message | tojson | safe }}</script>
+    <script id="data-exp-type" type="application/json">{{ experience_type | tojson | safe }}</script>
+    <script id="data-puzzle" type="application/json">{{ puzzle_data | tojson | safe }}</script>
+    <script id="data-quiz" type="application/json">{{ quiz_data | tojson | safe }}</script>
+    <script id="data-vuln-id" type="application/json">{{ vuln_id | tojson | safe }}</script>
+
+    <header class="ud-header">
+        <div class="site-logo">
+            <a href="/top">
+                <span class="material-icons-round icon" aria-hidden="true">security</span>
+                <span>セキュリティ学習ポータル</span>
+            </a>
+        </div>
+        <div class="user-menu">
+            <a href="/login" id="auth-button" class="header-btn">
+                <span class="material-icons-round" aria-hidden="true">login</span>
+                <span>ログイン</span>
+            </a>
+        </div>
+    </header>
+
+    <div class="main-wrapper">
+        
+        <nav class="breadcrumb-nav" aria-label="パンくずリスト">
+            <a href="/top" class="nav-link">
+                <span class="material-icons-round icon" aria-hidden="true">arrow_back</span>
+                <span>学習一覧に戻る</span>
+            </a>
+            
+            <a href="#" id="next-lesson-top" class="nav-link next-link" style="display:none;">
+                <span>次のコンテンツへ</span>
+                <span class="material-icons-round icon" aria-hidden="true">arrow_forward</span>
+            </a>
+        </nav>
+
+        <div class="content-grid">
+            
+            <!-- 左カラム: 学習資料 -->
+            <div class="left-col">
+                <section class="ud-card" aria-labelledby="lesson-heading">
+                    <div class="card-header">
+                        <span class="material-icons-round" aria-hidden="true">play_circle_filled</span>
+                        <span id="lesson-heading">学習コンテンツ</span>
+                    </div>
+                    <div class="card-body">
+                        
+                        <div class="video-container">
+                            <iframe id="video-player" src="" frameborder="0" allowfullscreen title="解説動画"></iframe>
+                        </div>
+
+                        <div class="lesson-header">
+                            <h1 class="lesson-title">{{ content_title }}</h1>
+                            
+                            <!-- UDスイッチ -->
+                            <label class="ud-checkbox">
+                                <input type="checkbox" id="progress-check">
+                                <span class="ud-checkbox-label" id="progress-label">学習を完了にする</span>
+                            </label>
+                        </div>
+
+                        <p class="lesson-description">{{ content_desc }}</p>
+
+                        <hr style="border:0; border-top:1px solid #eee; margin: 30px 0;">
+
+                        <!-- パズル -->
+                        <div class="puzzle-area">
+                            <div class="puzzle-header">
+                                <h3 style="margin:0; font-size:1.1rem; color:var(--color-primary-dark); display:flex; align-items:center; gap:5px;">
+                                    <span class="material-icons-round" aria-hidden="true">extension</span>
+                                    攻撃コード作成パズル
+                                </h3>
+                                <div class="puzzle-actions">
+                                    <button onclick="resetInput()">リセット</button>
+                                    <button onclick="toggleAnswer()">正解を見る</button>
+                                </div>
+                            </div>
+                            <p style="font-size:0.9rem; margin-bottom:15px; color:var(--color-text-sub);">
+                                以下のパーツをタップして、攻撃コマンドを組み立ててください。
+                            </p>
+                            
+                            <div class="word-bank" id="word-bank" role="list" aria-label="パズルのピース"></div>
+                            
+                            <div id="answer-area" class="answer-feedback" role="alert">
+                                <strong>💡 正解のコマンド:</strong> <span id="answer-code" style="font-family:monospace; margin-left:10px;"></span>
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
+            </div>
+
+            <!-- 右カラム: 演習環境 -->
+            <div class="right-col">
+                
+                <!-- TERMINAL -->
+                <div id="window-terminal" class="window-frame" style="display:none;">
+                    <div class="window-title-bar">
+                        <span>ターミナル (サーバー操作)</span>
+                        <span class="window-status">接続中</span>
+                    </div>
+                    <div class="terminal-content" id="terminal-body" role="log" aria-live="polite">
+                        <div>> ターゲットシステムに接続しました。</div>
+                        <div style="color:#aaa; margin-bottom:15px;">コマンドを入力してEnterキーを押してください。</div>
+                        <div id="output-history"></div>
+                        <div class="input-line">
+                            <span class="prompt">admin@server:~$</span>
+                            <input type="text" id="terminal-input" autocomplete="off" aria-label="コマンド入力">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BROWSER -->
+                <div id="window-browser" class="window-frame" style="display:none; border-color:#ccc;">
+                    <div class="window-title-bar" style="background:#e0e0e0; color:#333;">
+                        <span>Webブラウザ</span>
+                        <span class="window-status" style="background:#ccc;">オンライン</span>
+                    </div>
+                    <div class="browser-toolbar">
+                        <span class="material-icons-round" style="color:#777;">arrow_back</span>
+                        <span class="material-icons-round" style="color:#777;">arrow_forward</span>
+                        <div class="url-bar">http://vulnerable-site.com/search</div>
+                    </div>
+                    <div class="browser-content">
+                        <div class="fake-logo">Search <span style="color:var(--color-primary)">Me</span></div>
+                        <div class="search-form">
+                            <input type="text" id="browser-input" class="search-input" placeholder="検索ワードを入力" autocomplete="off" aria-label="検索ワード">
+                            <button class="search-btn" onclick="checkInput()">検索</button>
+                        </div>
+                        
+                        <!-- Alert Modal -->
+                        <div id="fake-alert-overlay" class="alert-modal-overlay">
+                            <div class="alert-box" role="alertdialog" aria-modal="true" aria-labelledby="alert-title" aria-describedby="alert-msg">
+                                <div id="alert-title" class="alert-title">
+                                    <span class="material-icons-round" aria-hidden="true">warning</span>
+                                    警告
+                                </div>
+                                <p id="alert-msg" style="font-size:1.1rem; font-weight:bold;">XSS脆弱性が実行されました</p>
+                                <button class="alert-btn" onclick="closeAlert()">閉じる</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Code Analysis (Toggle) -->
+                <div class="ud-card" style="margin-top:20px; border-color:var(--color-primary);">
+                    <div class="card-header" style="background:var(--color-primary); color:#fff;">
+                        <span class="material-icons-round" aria-hidden="true">code</span>
+                        ソースコード解説
+                    </div>
+                    <div id="secret-code-section" class="code-viewer">
+                        <div class="code-columns">
+                            <div class="code-col">
+                                <span class="col-label label-bad">× 脆弱なコード</span>
+                                <pre>{{ vulnerable_code }}</pre>
+                            </div>
+                            <div class="code-col">
+                                <span class="col-label label-good">○ 対策済みコード</span>
+                                <pre>{{ fixed_code }}</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- クイズ (全幅) -->
+        <section class="ud-card" aria-labelledby="quiz-heading">
+            <div class="card-header">
+                <span class="material-icons-round" aria-hidden="true">quiz</span>
+                <span id="quiz-heading">理解度チェック</span>
+            </div>
+            <div class="card-body quiz-container-full" id="quiz-container">
+                <p style="text-align:center; color:#777;">クイズデータを読み込んでいます...</p>
+            </div>
+        </section>
+
+        <div class="bottom-nav">
+            <a href="#" id="next-lesson-bottom" class="bottom-next-btn" style="display:none;">
+                次のコンテンツへ進む
+                <span class="material-icons-round" aria-hidden="true">arrow_forward</span>
+            </a>
+        </div>
+
+    </div>
+
+    <footer>
+        <p>&copy; 2025 セキュリティ学習ポータル | アクセシビリティに配慮したデザイン</p>
+    </footer>
+
+    <script>
+        // --- 共通処理: JSONデータ取得 ---
+        function getJsonFromTag(id) {
+            const el = document.getElementById(id);
+            if (!el) return null;
+            try {
+                const text = el.textContent.trim();
+                if (!text || text === 'null' || text === 'None') return null;
+                let parsed = JSON.parse(text);
+                if (typeof parsed === 'string') {
+                    if (parsed.startsWith('[') || parsed.startsWith('{')) { try { return JSON.parse(parsed); } catch(e) { return parsed; } }
+                }
+                return parsed;
+            } catch (e) { console.error(`JSON Parse Error (${id}):`, e); return null; }
+        }
+
+        const contentData = {
+            videoId:       getJsonFromTag('data-video-id') || "",
+            targetCommand: getJsonFromTag('data-target') || "",
+            successMessage: getJsonFromTag('data-success') || "成功しました！",
+            experienceType: getJsonFromTag('data-exp-type') || "TERMINAL",
+            puzzleData:    getJsonFromTag('data-puzzle') || [],
+            quizData:      getJsonFromTag('data-quiz') 
+        };
+
+        // --- 初期化処理 ---
+        function getYoutubeId(url) {
+            if (!url) return "";
+            const match = url.match(/[\?\&]v=([^&]+)/) || url.match(/\/embed\/([^?]+)/) || url.match(/^[\w-]{11}$/);
+            return (match && match.length > 0) ? (match[1] || match[0]) : url;
+        }
+
+        if (contentData.videoId) {
+            document.getElementById('video-player').src = `https://www.youtube.com/embed/${getYoutubeId(contentData.videoId)}`;
+        }
+        document.getElementById('answer-code').textContent = contentData.targetCommand;
+
+        // パズル生成
+        const wordBank = document.getElementById('word-bank');
+        if (contentData.puzzleData && Array.isArray(contentData.puzzleData)) {
+            const shuffled = [...contentData.puzzleData].sort(() => Math.random() - 0.5);
+            shuffled.forEach(part => {
+                const chip = document.createElement('button'); // buttonタグでアクセシビリティ向上
+                chip.className = 'word-chip';
+                chip.textContent = part.text;
+                chip.onclick = () => addInput(part.text);
+                wordBank.appendChild(chip);
+            });
+        } else { wordBank.innerHTML = '<span>パズルデータがありません。</span>'; }
+
+        // 画面切り替え
+        if (contentData.experienceType === 'BROWSER') {
+            document.getElementById('window-browser').style.display = 'flex';
+        } else {
+            document.getElementById('window-terminal').style.display = 'flex';
+        }
+
+        // クイズ生成
+        if (contentData.quizData) {
+            const q = contentData.quizData;
+            const container = document.getElementById('quiz-container');
+            container.innerHTML = `
+                <h3 class="quiz-title">問題: ${q.question}</h3>
+                <div id="quiz-options-box" class="quiz-options"></div>
+                <div id="quiz-explanation" class="quiz-explanation">
+                    <h4 class="explanation-title">解説</h4>
+                    <p><strong>正解: ${q.answer}</strong></p>
+                    <p>${q.explanation}</p>
+                    <button class="retry-btn" onclick="resetQuiz()">もう一度解く</button>
+                </div>
+            `;
+            
+            const optionsBox = document.getElementById('quiz-options-box');
+            q.options.forEach(opt => {
+                if(opt.text) { 
+                    const btn = document.createElement('button'); // buttonタグ
+                    btn.className = 'quiz-choice';
+                    btn.innerHTML = `<span class="choice-marker">${opt.label}</span> <span>${opt.text}</span>`;
+                    btn.onclick = function() { checkQuiz(this, opt.label === q.answer); };
+                    optionsBox.appendChild(btn);
+                }
+            });
+        }
+
+        // --- 入力ロジック ---
+        function addInput(text) {
+            const inputId = contentData.experienceType === 'BROWSER' ? 'browser-input' : 'terminal-input';
+            const input = document.getElementById(inputId);
+            let val = input.value;
+            if (val.length > 0 && !val.endsWith(' ')) val += ' ';
+            input.value = val + text;
+            input.focus();
+        }
+        function resetInput() {
+            const inputId = contentData.experienceType === 'BROWSER' ? 'browser-input' : 'terminal-input';
+            document.getElementById(inputId).value = '';
+            document.getElementById(inputId).focus();
+        }
+        function toggleAnswer() {
+            const area = document.getElementById('answer-area');
+            area.style.display = (area.style.display === 'block') ? 'none' : 'block';
+        }
+
+        const outputHistory = document.getElementById('output-history');
+        const codeSection = document.getElementById('secret-code-section');
+
+        function checkInput() {
+            const isBrowser = (contentData.experienceType === 'BROWSER');
+            const inputId = isBrowser ? 'browser-input' : 'terminal-input';
+            const input = document.getElementById(inputId);
+            const val = input.value.trim();
+            if (!val) return;
+
+            const normalize = s => s.replace(/\s+/g, '').replace(/'/g, '"');
+            const target = contentData.targetCommand || "IMPOSSIBLE";
+            const normalizedTarget = normalize(target);
+            const isCorrect = normalize(val).includes(normalizedTarget);
+
+            if (isBrowser) {
+                if (isCorrect) {
+                    document.getElementById('fake-alert-overlay').style.display = 'flex';
+                    document.getElementById('alert-msg').textContent = contentData.successMessage;
+                    revealCodeSection();
+                } else { alert("何も起きませんでした。"); }
+            } else {
+                addLog(`admin@server:~$ ${val}`, '#fff');
+                setTimeout(() => {
+                    if (isCorrect) {
+                        addLog(`>> 成功: ${contentData.successMessage}`, "#0f0");
+                        revealCodeSection();
+                    } else { addLog(">> エラー: コマンドが正しくありません。", "#f55"); }
+                    // terminalBody.scrollTop = terminalBody.scrollHeight;
+                }, 200);
+                input.value = '';
+            }
+        }
+
+        ['terminal-input', 'browser-input'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.addEventListener('keydown', e => { if(e.key === 'Enter') checkInput(); });
+        });
+
+        function addLog(text, color) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            div.style.color = color;
+            div.style.marginBottom = "5px";
+            document.getElementById('output-history').appendChild(div);
+        }
+        function closeAlert() { document.getElementById('fake-alert-overlay').style.display = 'none'; }
+        
+        function revealCodeSection() {
+            if (codeSection) {
+                codeSection.classList.add('visible');
+                codeSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        function checkQuiz(button, isCorrect) {
+            const parent = button.parentElement;
+            if (parent.classList.contains('answered')) return;
+            parent.classList.add('answered');
+            
+            if (isCorrect) {
+                button.style.backgroundColor = "#e8f5e9";
+                button.style.borderColor = "var(--color-success)";
+                button.innerHTML += ' <strong class="status-text" style="color:var(--color-success); margin-left:auto;">◎ 正解</strong>';
+            } else {
+                button.style.backgroundColor = "#ffebee";
+                button.style.borderColor = "var(--color-accent)";
+                button.innerHTML += ' <strong class="status-text" style="color:var(--color-accent); margin-left:auto;">× 不正解</strong>';
+                
+                // 正解を表示
+                const btns = parent.children;
+                for(let btn of btns) {
+                    if(btn.innerText.includes(contentData.quizData.answer)) {
+                        btn.style.borderColor = "var(--color-success)";
+                        btn.style.backgroundColor = "#e8f5e9";
+                    }
+                }
+            }
+            document.getElementById('quiz-explanation').style.display = 'block';
+        }
+
+        function resetQuiz() {
+            const optionsBox = document.getElementById('quiz-options-box');
+            optionsBox.classList.remove('answered');
+            document.getElementById('quiz-explanation').style.display = 'none';
+            // 選択肢の再描画が必要だが、簡易的にリロードを促すか、HTMLを再生成する
+            // ここでは簡易的に色を戻す処理のみ
+            const btns = optionsBox.children;
+            for (let btn of btns) {
+                btn.style.backgroundColor = "#fff";
+                btn.style.borderColor = "#ccc";
+                // ステータステキストを削除 (簡易実装)
+                const statusSpan = btn.querySelector('.status-text');
+                if(statusSpan) statusSpan.remove();
+            }
+            // 完全リセットのためリロード推奨だが、簡易リセット
+        }
+
+        // --- 認証・進捗管理 ---
+        document.addEventListener('DOMContentLoaded', function () {
+            const authButton = document.getElementById('auth-button');
+            const token = localStorage.getItem('jwt_token'); 
+            
+            if (token) { 
+                authButton.innerHTML = '<span class="material-icons-round icon" aria-hidden="true">account_circle</span> <span>マイページ</span>';
+                authButton.href = '/mypage'; 
+            } else { 
+                authButton.innerHTML = '<span class="material-icons-round icon" aria-hidden="true">login</span> <span>ログイン</span>';
+                authButton.href = '/login'; 
+            }
+
+            const progressCheck = document.getElementById('progress-check');
+            const progressLabel = document.getElementById('progress-label');
+            let currentVulnId = getJsonFromTag('data-vuln-id');
+            
+            if (!currentVulnId) {
+                const matches = window.location.pathname.match(/\/(\d+)$/);
+                if (matches) currentVulnId = parseInt(matches[1]);
+            }
+
+            // 次へボタンの制御
+            if (currentVulnId) {
+                fetch('/api/vulnerabilities').then(res => res.json()).then(data => {
+                    if (data.success && data.data.length > 0) {
+                        const allIds = data.data.map(v => v.vuln_id).sort((a,b)=>a-b);
+                        const currentIndex = allIds.indexOf(currentVulnId);
+                        if (currentIndex !== -1) {
+                            let nextIndex = currentIndex + 1;
+                            if (nextIndex >= allIds.length) nextIndex = 0;
+                            const nextId = allIds[nextIndex];
+                            
+                            const topBtn = document.getElementById('next-lesson-top');
+                            const bottomBtn = document.getElementById('next-lesson-bottom');
+                            
+                            if (topBtn) { topBtn.href = `/lesson/${nextId}`; topBtn.style.display = 'inline-flex'; }
+                            if (bottomBtn) { bottomBtn.href = `/lesson/${nextId}`; bottomBtn.style.display = 'inline-flex'; }
+                        }
+                    }
+                });
+            }
+
+            if (token && currentVulnId) {
+                fetch('/api/progress/all', { headers: { 'Authorization': `Bearer ${token}` } })
+                .then(res => res.json()).then(data => {
+                    if (data.success) {
+                        const item = data.data.find(d => d.vuln_id === currentVulnId);
+                        if (item && item.status === 'COMPLETED') {
+                            progressCheck.checked = true;
+                            progressLabel.textContent = "学習済み（完了）";
+                            progressLabel.style.color = "var(--color-success)";
+                        }
+                    }
+                });
+
+                progressCheck.addEventListener('change', function() {
+                    const isCompleted = this.checked;
+                    progressLabel.textContent = isCompleted ? "学習済み（完了）" : "学習を完了にする";
+                    progressLabel.style.color = isCompleted ? "var(--color-success)" : "var(--color-text-sub)";
+                    
+                    fetch('/api/progress/update', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ vuln_id: currentVulnId, completed: isCompleted })
+                    }).then(res => res.json()).then(res => {
+                        if(!res.success) {
+                            alert('進捗の保存に失敗しました。');
+                            this.checked = !isCompleted;
+                        }
+                    });
+                });
+            } else if (progressCheck) {
+                progressCheck.disabled = true;
+                progressLabel.textContent = "ログインが必要です";
+            }
+        });
+    </script>
+</body>
+</html>

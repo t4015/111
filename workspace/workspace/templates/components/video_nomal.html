@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>根本原因から学ぶWebセキュリティ - トップページ</title>
+    <link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/main.css">
+ 
+</head>
+
+<body>
+
+    <header class="ud-header">
+        
+        <div class="site-logo">
+            <a href="/">
+                <span class="material-icons-round icon" aria-hidden="true">security</span>
+                <span>根本原因から学ぶWebセキュリティ</span>
+            </a>
+        </div>
+        <div class="user-menu">
+            <a href="/login" id="auth-button" class="header-btn">
+                <span class="material-icons-round" aria-hidden="true">login</span>
+                <span>ログイン</span>
+            </a>
+        </div>
+    </header>
+
+    <main class="main-wrapper">
+        <section class="hero-section">
+            <h1 class="hero-title">
+                Webセキュリティの<br><span>「根本原因」</span>を学ぶ
+            </h1>
+            <p class="hero-text">
+                現象ごとの対処療法ではなく、脆弱性が生まれる構造的な原因を理解し、<br>
+                安全なWebアプリケーションを設計・実装する力を身につけましょう。
+            </p>
+        </section>
+
+        <div class="content-container">
+            <h2 class="section-title">
+                <span class="material-icons-round" aria-hidden="true">list_alt</span>
+                学習コンテンツ一覧
+            </h2>
+            
+            <ul class="vulnerability-list" id="vulnList">
+                <li class="status-message">
+                    コンテンツを読み込んでいます...
+                </li>
+            </ul>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 セキュリティ学習ポータル | <a href="/contact">お問い合わせ</a></p>
+    </footer>
+
+    <script>
+        // ★追加: XSS対策用エスケープ関数
+        function escapeHtml(unsafe) {
+            if (typeof unsafe !== 'string') return unsafe;
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            fetch('/api/vulnerabilities')
+                .then(res => {
+                    if (!res.ok) throw new Error('ネットワークエラーが発生しました');
+                    return res.json();
+                })
+                .then(json => {
+                    const container = document.getElementById('vulnList');
+                    container.innerHTML = "";
+
+                    const staticItems = [];
+                    let allItems = [];
+                    if (json.success && json.data) {
+                        allItems = json.data.map(v => ({
+                            ...v,
+                            url: `/lesson/${v.vuln_id}`
+                        }));
+                    }
+
+                    allItems = allItems.concat(staticItems);
+
+                    if (allItems.length === 0) {
+                        container.innerHTML = '<li class="status-message">現在、利用可能なコンテンツはありません。</li>';
+                        return;
+                    }
+
+                    allItems.forEach((v, index) => {
+                        const li = document.createElement('li');
+                        li.className = 'vulnerability-item';
+                        
+                        let iconName = 'lock_open';
+                        if(v.vuln_name.includes('SQL')) iconName = 'storage';
+                        if(v.vuln_name.includes('XSS')) iconName = 'code';
+                        if(v.vuln_name.includes('Command')) iconName = 'terminal';
+
+                        const a = document.createElement('a');
+                        a.href = v.url;
+                        a.className = 'content-card';
+                        
+                        // ★修正: escapeHtml() を使用して変数を埋め込む
+                        a.innerHTML = `
+                            <div class="card-left">
+                                <div class="card-icon" aria-hidden="true">
+                                    <span class="material-icons-round">${iconName}</span>
+                                </div>
+                                <div class="card-info">
+                                    <span class="chapter-label">Chapter ${index + 1}</span>
+                                    <h3 class="card-title">${escapeHtml(v.vuln_name)}</h3>
+                                </div>
+                            </div>
+                            <span class="material-icons-round card-arrow" aria-hidden="true">arrow_forward_ios</span>
+                        `;
+                        
+                        li.appendChild(a);
+                        container.appendChild(li);
+                    });
+
+                })
+                .catch(err => {
+                    console.error('取得エラー:', err);
+                    document.getElementById('vulnList').innerHTML = 
+                        '<li class="status-message error-text"><span class="material-icons-round" style="vertical-align:middle;">error</span> コンテンツの読み込みに失敗しました。再読み込みしてください。</li>';
+                });
+        });
+
+
+        (function () {
+            function checkLoginStatus() {
+                const token = localStorage.getItem('jwt_token');
+                if (token) {
+                    return { loggedIn: true };
+                } else {
+                    return { loggedIn: false };
+                }
+            }
+
+            document.addEventListener('DOMContentLoaded', function () {
+                const authButton = document.getElementById('auth-button');
+                if (!authButton) return;
+
+                const status = checkLoginStatus();
+
+                if (status.loggedIn) {
+                    authButton.innerHTML = '<span class="material-icons-round" aria-hidden="true">account_circle</span> <span>マイページ</span>';
+                    authButton.href = '/mypage';
+                } else {
+                    authButton.innerHTML = '<span class="material-icons-round" aria-hidden="true">login</span> <span>ログイン</span>';
+                    authButton.href = '/login';
+                }
+            });
+        })();
+    </script>
+
+</body>
+</html>

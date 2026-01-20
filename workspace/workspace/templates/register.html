@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>アカウント作成 - 根本原因から学ぶWebセキュリティ</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+
+</head>
+<body>
+    {% include "components/header.html" %}
+
+    <div class="login-container">
+        
+        <form id="register-form">
+            <h1 class="login-title">アカウント作成</h1>
+
+            <div id="error-message" class="error-message" style="display: none;"></div>
+            
+            <div class="form-group">
+                <label for="display_name">表示名 (ニックネーム)</label>
+                <input type="text" id="display_name" name="display_name" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">メールアドレス (ログインID)</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">パスワード</label>
+                <input type="password" id="password" name="password" required>
+                
+                <div class="password-strength-meter">
+                    <div id="password-strength-bar" class="password-strength-bar"></div>
+                </div>
+                <div id="password-feedback" class="password-feedback"></div>
+            </div>
+
+            <div class="turnstile-container">
+                <div class="cf-turnstile" data-sitekey="0x4AAAAAAB_WsRju7r8LDFGh"></div>
+            </div>
+
+            <div class="agreement-item">
+                <label for="terms_agree" class="agreement-label">
+                    <input type="checkbox" id="terms_agree" name="terms_agree" required>
+                    <span class="agreement-text">
+                        <a href="/terms" target="_blank" rel="noopener noreferrer">利用規約</a>
+                        <span>に同意する</span>
+                    </span>
+                </label>
+            </div>
+
+            <div class="agreement-item">
+                <label for="privacy_agree" class="agreement-label">
+                    <input type="checkbox" id="privacy_agree" name="privacy_agree" required>
+                    <span class="agreement-text">
+                        <a href="/privacy" target="_blank" rel="noopener noreferrer">プライバシーポリシー</a>
+                        <span>に同意する</span>
+                    </span>
+                </label>
+            </div>
+
+            <button type="submit" class="login-button" id="register-button">登録してMFA設定へ</button>
+
+            <div class="form-links">
+                <a href="/login">すでにアカウントをお持ちですか？ (ログイン)</a>
+            </div>
+        </form>
+
+        <div id="qr-code-section" class="qr-code-section">
+            <h2>MFA（二要素認証）設定</h2>
+            <p>
+                アカウントの作成が完了しました。<br>
+                セキュリティのため、認証アプリで以下のQRコードをスキャンしてください。
+            </p>
+
+            <ol class="mfa-steps">
+                <li>
+                    <span class="step-number">1</span>
+                    <span class="step-content">認証アプリをインストール</span>
+                    <span class="step-description">
+                        お持ちのスマートフォンに「Google Authenticator」などの認証アプリをインストールします。
+                        <div class="store-links">
+                            <a href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2" target="_blank" rel="noopener">Google Play</a>
+                            <a href="https://apps.apple.com/jp/app/google-authenticator/id388497605" target="_blank" rel="noopener">App Store</a>
+                        </div>
+                    </span>
+                </li>
+                <li>
+                    <span class="step-number">2</span>
+                    <span class="step-content">QRコードをスキャン</span>
+                    <span class="step-description">
+                        インストールした認証アプリを開き、「+」ボタンから「QRコードをスキャン」を選択して、下のコードを読み取ります。
+                    </span>
+                    
+                    <div class="qr-code-container">
+                        <img id="qr-code-image" src="" alt="MFA QR Code">
+                    </div>
+                </li>
+                <li>
+                    <span class="step-number">3</span>
+                    <span class="step-content">ログインページへ進む</span>
+                    <span class="step-description">
+                        アプリに6桁のコードが表示されたら設定完了です。下のボタンからログインページに進み、登録した情報でログインしてください。
+                    </span>
+                </li>
+            </ol>
+            
+            <a href="/login" class="login-link">ログインページへ進む</a>
+        </div>
+    </div>
+
+    <script>
+        // パスワード強度チェック
+        const passwordInput = document.getElementById('password');
+        const strengthBar = document.getElementById('password-strength-bar');
+        const feedbackText = document.getElementById('password-feedback');
+
+        passwordInput.addEventListener('input', function() {
+            const password = passwordInput.value;
+            const strength = checkPasswordStrength(password);
+            
+            strengthBar.className = 'password-strength-bar';
+            if (strength.score > 0) {
+                strengthBar.classList.add(strength.className);
+                strengthBar.style.width = strength.width;
+            } else {
+                strengthBar.style.width = '0%';
+            }
+            feedbackText.textContent = strength.message;
+        });
+
+        function checkPasswordStrength(password) {
+            let score = 0;
+            let feedback = { score: 0, className: '', width: '0%', message: '' };
+            if (password.length === 0) return feedback;
+
+            if (password.length >= 8) score++;
+            if (/[a-z]/.test(password)) score++;
+            if (/[A-Z]/.test(password)) score++;
+            if (/[0-9]/.test(password)) score++;
+            if (/[^a-zA-Z0-9]/.test(password)) score++;
+
+            feedback.score = score;
+            switch (score) {
+                case 1: case 2: feedback.className = 'strength-weak'; feedback.width = '33%'; feedback.message = '弱い'; break;
+                case 3: case 4: feedback.className = 'strength-medium'; feedback.width = '66%'; feedback.message = '中程度'; break;
+                case 5: feedback.className = 'strength-strong'; feedback.width = '100%'; feedback.message = '強力'; break;
+                default: feedback.className = 'strength-weak'; feedback.width = '10%'; feedback.message = '弱い'; break;
+            }
+            if (password.length > 0 && password.length < 8) {
+                feedback.message = '8文字以上必要です';
+                feedback.className = 'strength-weak';
+                feedback.width = '10%';
+            }
+            return feedback;
+        }
+
+        // フォーム送信
+        const registerButton = document.getElementById('register-button');
+        const termsCheckbox = document.getElementById('terms_agree');
+        const privacyCheckbox = document.getElementById('privacy_agree');
+        
+        // ボタン状態更新
+        function updateButtonState() {
+            if (termsCheckbox.checked && privacyCheckbox.checked) {
+                registerButton.disabled = false;
+            } else {
+                registerButton.disabled = true;
+            }
+        }
+        termsCheckbox.addEventListener('change', updateButtonState);
+        privacyCheckbox.addEventListener('change', updateButtonState);
+        updateButtonState(); // 初期化
+
+        document.getElementById('register-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            const errorMessage = document.getElementById('error-message');
+            errorMessage.style.display = 'none';
+            registerButton.disabled = true;
+            registerButton.textContent = '登録中...';
+
+            const formData = new FormData(event.target);
+            const data = Object.fromEntries(formData.entries());
+
+            const turnstileToken = turnstile.getResponse();
+            if (!turnstileToken) {
+                errorMessage.textContent = '「私はロボットではありません」にチェックを入れてください。';
+                errorMessage.style.display = 'block';
+                registerButton.disabled = false;
+                registerButton.textContent = '登録してMFA設定へ';
+                return;
+            }
+            data['cf-turnstile-response'] = turnstileToken;
+
+            fetch('/api/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success && result.qr_code_image) {
+                    document.getElementById('register-form').style.display = 'none';
+                    document.getElementById('qr-code-section').style.display = 'block';
+                    document.getElementById('qr-code-image').src = result.qr_code_image;
+                } else {
+                    errorMessage.textContent = result.message || '登録に失敗しました。';
+                    errorMessage.style.display = 'block';
+                    registerButton.disabled = false;
+                    registerButton.textContent = '登録してMFA設定へ';
+                    if (window.turnstile) window.turnstile.reset();
+                }
+            })
+            .catch(error => {
+                console.error('Fetch Error:', error);
+                errorMessage.textContent = 'サーバーとの通信に失敗しました。';
+                errorMessage.style.display = 'block';
+                registerButton.disabled = false;
+                registerButton.textContent = '登録してMFA設定へ';
+            });
+        });
+
+        // モーダル制御のJavaScriptを削除済み
+    </script>
+</body>
+</html>
