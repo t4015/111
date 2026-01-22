@@ -151,13 +151,19 @@ def create_app(testing=False):
     
     # --- DB 設定 ---
     if testing:
+        app.config["TESTING"] = True
         app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
+        app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+        app.config["WTF_CSRF_ENABLED"] = False
+        app.config["SECRET_KEY"] = "test-secret-key"
     else:
+        # 通常のDB設定（MySQL）
         DB_USER = os.getenv("DB_USER", "root")
         DB_PASSWORD = os.getenv("DB_PASSWORD", "")
         DB_HOST = os.getenv("DB_HOST", "localhost")
         DB_NAME = os.getenv("DB_NAME", "attacker_learn_db")
         app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}"
+        app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 

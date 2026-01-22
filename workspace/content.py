@@ -18,9 +18,12 @@ inquiry_bp = Blueprint('inquiry_bp', __name__)
 
 @content_bp.route('/lesson/<int:vuln_id>')
 def lesson(vuln_id):
-    vuln = Vulnerability.query.get(vuln_id)
+    # db.session.get ではなく、クエリを直接発行する
+    vuln = Vulnerability.query.filter_by(vuln_id=vuln_id).first()
     
     if not vuln:
+        # デバッグ用にこっそりログを出す
+        print(f"DEBUG: Vulnerability not found for ID {vuln_id}")
         return render_template('top.html'), 404
 
     # クイズデータを取得

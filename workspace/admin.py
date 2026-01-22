@@ -126,7 +126,7 @@ def admin_create_user():
 @jwt_required()
 @admin_required
 def delete_vulnerability(vuln_id):
-    vuln = Vulnerability.query.get(vuln_id)
+    vuln = db.session.get(Vulnerability, vuln_id)
     if not vuln:
         return jsonify({"success": False, "message": "Not found"}), 404
 

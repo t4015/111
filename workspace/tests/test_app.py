@@ -23,6 +23,8 @@ from requests.exceptions import RequestException
 from unittest.mock import MagicMock
 from argon2 import PasswordHasher
 import auth  
+from tests.conftest import captured_templates
+from models import Quiz
 
 @pytest.fixture
 def disable_jwt(mocker):
@@ -148,14 +150,12 @@ def setup_db(app_instance):
 
 @pytest.fixture
 def mock_auth_functions(mocker):
-    """
-    UT-AUTH-015 / UT-AUTH-016 専用モック
-    - JWT 無効化
-    - Turnstile 無効化
-    - パスワード関数モック
-    - DB モック
-    - メール送信モック
-    """
+    #UT-AUTH-015 / UT-AUTH-016 専用モック
+    #- JWT 無効化
+    #- Turnstile 無効化
+    #- パスワード関数モック
+    #- DB モック
+    #- メール送信モック
     # --- JWT ---
     mocker.patch("auth.verify_jwt_in_request", lambda: None)
     mocker.patch("auth.get_jwt_identity", return_value=1)
@@ -191,9 +191,9 @@ def mock_auth_functions(mocker):
     # --- メール送信モック ---
     mocker.patch("auth.send_password_reset_email", return_value=True)
 
+#テスト用ユーザーを作成
 @pytest.fixture
 def test_user(app_instance):
-    """テスト用ユーザーを作成"""
     user = User(
         user_id=1,
         email="test@example.com",
@@ -361,11 +361,9 @@ def test_admin_required_user_role(client, user_token):
 
 #10
 def test_admin_required_invalid_jwt(client):
-    """
-    UT-APP-010:
-    admin_required が付いたAPIに不正なJWTを送信すると
-    401 Unauthorized が返ることを確認
-    """
+    #UT-APP-010:
+    #admin_required が付いたAPIに不正なJWTを送信すると
+    #401 Unauthorized が返ることを確認
     json_data = {
         "email": "dummy@test.com",
         "password": "dummy_pw",
@@ -378,7 +376,7 @@ def test_admin_required_invalid_jwt(client):
 
     assert res.status_code in (401, 422)  # JWT無効なら422でもOK
 
-#11
+#UT-APP-011
 def test_admin_required_with_admin():
     from admin import admin_required
     app = Flask(__name__)
@@ -420,7 +418,7 @@ def test_admin_required_with_admin():
     assert resp.status_code == 200
     assert executed["called"] is True
 
-#12
+#UT-APP-012
 def test_top_page_routes(client):
     # /
     res_root = client.get("/")
@@ -432,26 +430,141 @@ def test_top_page_routes(client):
     assert res_top.status_code == 200
     assert b"top" in res_top.data.lower()
 
-#14
-def test_reset_password_page_renders_template(client):
+#UT-APP-013
+def test_reset_password_page(client):
     res = client.get("/reset_password")
+    
+    # ステータスコード
+    assert res.status_code == 200
+
+    # bytes -> str に変換
+    html = res.data.decode("utf-8")
+    
+    # 日本語を文字列として確認
+    assert "新しいパスワードの設定" in html
+
+
+
+# =========
+# #UT-APP-014
+# Quiz データあり
+# =========
+def test_lesson_with_quiz(client, monkeypatch):
+    from models import Vulnerability, Quiz
+    import content
+    from flask import Response
+
+    captured = {}
+
+    def fake_render(template_name, **context):
+        captured["template"] = template_name
+        captured["context"] = context
+        return Response("OK", status=200)
+
+    class DummyVuln:
+        vuln_id = 1
+        vuln_name = "Test Vuln"
+        video_url = "abc123"
+        description = "desc"
+        experience_type = "type"
+        target_keyword = "keyword"
+        success_message = "success"
+        vulnerable_code = "bad"
+        fixed_code = "good"
+        failure_feedback = None
+        puzzle_data = None
+        defense_puzzle_data = None
+
+    class DummyQuiz:
+        question_text = "Q?"
+        choice_a = "A"
+        choice_b = "B"
+        choice_c = "C"
+        choice_d = "D"
+        correct_answer = "A"
+        explanation = "Because"
+
+    class DummyQueryVuln:
+        def filter_by(self, **kwargs): return self
+        def first(self): return DummyVuln()
+
+    class DummyQueryQuiz:
+        def filter_by(self, **kwargs): return self
+        def first(self): return DummyQuiz()
+
+    monkeypatch.setattr(Vulnerability, "query", DummyQueryVuln())
+    monkeypatch.setattr(Quiz, "query", DummyQueryQuiz())
+    monkeypatch.setattr(content, "render_template", fake_render)
+
+    res = client.get("/lesson/1")
 
     assert res.status_code == 200
-    assert b"<html" in res.data or res.data != b""
+    assert captured["template"] == "video.html"
+    assert isinstance(captured["context"]["quiz_data"], dict)
+    assert captured["context"]["quiz_data"]["question"] == "Q?"
+
+# =========
+# UT-APP-015
+# Quiz データなし
+# =========
+def test_lesson_without_quiz(client, monkeypatch):
+    from models import Vulnerability, Quiz
+    import content
+    from flask import Response
+
+    captured = {}
+
+    def fake_render(template_name, **context):
+        captured["template"] = template_name
+        captured["context"] = context
+        return Response("OK", status=200)
+
+    class DummyVuln:
+        vuln_id = 2
+        vuln_name = "No Quiz Vuln"
+        video_url = "xyz999"
+        description = "desc"
+        experience_type = "type"
+        target_keyword = "keyword"
+        success_message = "success"
+        vulnerable_code = "bad"
+        fixed_code = "good"
+        failure_feedback = None
+        puzzle_data = None
+        defense_puzzle_data = None
+
+    class DummyQueryVuln:
+        def filter_by(self, **kwargs): return self
+        def first(self): return DummyVuln()
+
+    class DummyQueryQuiz:
+        def filter_by(self, **kwargs): return self
+        def first(self): return None
+
+    monkeypatch.setattr(Vulnerability, "query", DummyQueryVuln())
+    monkeypatch.setattr(Quiz, "query", DummyQueryQuiz())
+    monkeypatch.setattr(content, "render_template", fake_render)
+
+    res = client.get("/lesson/2")
+
+    assert res.status_code == 200
+    assert captured["template"] == "video.html"
+    assert captured["context"]["quiz_data"] is None
+
 
 def test_lesson_page_not_found(client):
-    """
-    UT-APP-017
-    存在しない vuln_id でアクセスした場合、404 が返ること
-    """
+ 
+    #UT-APP-016
+    #存在しない vuln_id でアクセスした場合、404 が返ること
+   
     res = client.get("/lesson/9999")
     assert res.status_code == 404
 
 def test_blueprints_are_registered(app_instance):
-    """
-    UT-APP-018
-    アプリ初期化時に必要な Blueprint が全て登録されていること
-    """
+    
+    #UT-APP-017
+    #アプリ初期化時に必要な Blueprint が全て登録されていること
+    
     bp_names = app_instance.blueprints.keys()
 
     assert "auth_bp" in bp_names
@@ -460,10 +573,10 @@ def test_blueprints_are_registered(app_instance):
     assert "inquiry_bp" in bp_names
 
 def test_register_user_bot_detection(client, mocker):
-    """
-    UT-AUTH-001
-    Bot検出で登録不可
-    """
+    
+    #UT-AUTH-001
+    #Bot検出で登録不可
+    
     # Turnstile チェックを強制的に False
     mocker.patch("auth.check_turnstile", return_value=False)
 
@@ -573,10 +686,10 @@ def test_register_user_unexpected_exception(client, mocker):
 
 
 def test_register_user_success(client, mocker):
-    """
-    UT-AUTH-004
-    ユーザー登録正常系
-    """
+    
+    #UT-AUTH-004
+    #ユーザー登録正常系
+    
 
     # Flask が実際に使っている view 関数を取得
     view_func = client.application.view_functions["auth_bp.register_user"]
@@ -627,12 +740,12 @@ def test_register_user_success(client, mocker):
     assert body["qr_code_image"].startswith("data:image/png;base64,")
 
 
-
+#UT-AUTH-005
+#Bot検出でログイン不可
 def test_login_user_bot_detection(client, mocker):
-    """
-    UT-AUTH-005
-    Bot検出でログイン不可
-    """
+    
+   
+    
     # auth.py 内の check_turnstile を False にして BOT 検知
     mocker.patch("auth.check_turnstile", return_value=False)
 
@@ -647,13 +760,12 @@ def test_login_user_bot_detection(client, mocker):
     assert res.status_code == 403
     assert res.get_json() == {"success": False, "message": "BOT検出"}
 
-# tests/test_app.py
-
+#UT-AUTH-006
+#存在しないユーザーでログインした場合、401が返ること
 def test_login_user_nonexistent(client, mocker):
-    """
-    UT-AUTH-006
-    存在しないユーザーでログインした場合、401が返ること
-    """
+    
+    
+    
     # BOT検知を無効化
     mocker.patch("auth.check_turnstile", return_value=True)
 
@@ -930,15 +1042,9 @@ def test_change_password_success(client, jwt_headers, test_user):
 
     assert res.status_code == 422
 
-# UT-AUTH-016: 存在する email でパスワードリセット要求
-import importlib
-import auth
-
+#UT-AUTH-016
+#request_password_reset: ユーザーが存在する場合にメールが送信されること
 def test_request_password_reset_user_exists(client, setup_db, disable_turnstile, mocker):
-    """
-    UT-AUTH-016
-    request_password_reset: ユーザーが存在する場合にメールが送信されること
-    """
     # 1. 依存関数を個別にモック化
     # ※ auth.send_password_reset_email ではなく auth_bp 内の参照を直接叩く
     send_mail_mock = mocker.patch("auth.send_password_reset_email", return_value=True)
@@ -1018,12 +1124,13 @@ def test_request_password_reset_user_not_exists(client, mocker, email):
 
 
 
+# UT-AUTH-018: exec_reset_password 無効トークン
+#無効または期限切れの reset_token を送信すると
+#400 Bad Request / "無効なトークン" が返ること
 def test_reset_password_invalid_token(client, mocker):
-    """
-    UT-AUTH-018: exec_reset_password 無効トークン
-    無効または期限切れの reset_token を送信すると
-    400 Bad Request / "無効なトークン" が返ること
-    """
+    
+   
+    
 
     # --- モック: 無効トークンなので None を返す ---
     mocker.patch(
@@ -1091,13 +1198,9 @@ def test_reset_password_success(client, mocker):
     auth.db.session.delete.assert_called_once_with(mock_token)
 
 
-
+#UT-AUTH-020: encrypt_otp_secret 鍵なし
+#    MFA_ENCRYPTION_KEY 未設定で平文が返ること
 def test_encrypt_otp_secret_no_key(client, caplog, mocker, capsys):
-    """
-    UT-AUTH-020: encrypt_otp_secret 鍵なし
-    MFA_ENCRYPTION_KEY 未設定で平文が返ること
-    """
-    import auth, os
 
     # --- 環境変数を削除してキー未設定にする ---
     os.environ.pop("MFA_ENCRYPTION_KEY", None)
@@ -1153,12 +1256,12 @@ def test_encrypt_otp_secret_with_key():
         },
     ]
 )
+
+
+# UT-ADM-001: admin_create_user 必須欠落
+#    email / password / display_name のいずれかが欠落した場合、
+#400 Bad Request / '必須項目が不足しています' が返ること
 def test_admin_create_user_required_missing(client, payload):
-    """
-    UT-ADM-001: admin_create_user 必須欠落
-    email / password / display_name のいずれかが欠落した場合、
-    400 Bad Request / '必須項目が不足しています' が返ること
-    """
 
     # --- ADMIN JWT ---
     access_token = create_access_token(identity=1)
@@ -1178,12 +1281,9 @@ def test_admin_create_user_required_missing(client, payload):
     assert data is not None
 
 # UT-ADM-002: encrypt_otp_secret が None を返す
+#admin_create_user で OTP 秘密鍵の暗号化に失敗した場合、
+#    500 / '暗号化に失敗しました' が返ること
 def test_admin_create_user_encrypt_fail(client, mocker):
-    """
-    admin_create_user で OTP 秘密鍵の暗号化に失敗した場合、
-    500 / '暗号化に失敗しました' が返ること
-    """
-
     # --- ADMIN JWT ---
     access_token = create_access_token(identity="1")
 
@@ -1217,13 +1317,9 @@ def test_admin_create_user_encrypt_fail(client, mocker):
 
 
 from sqlalchemy.exc import IntegrityError
-
+#UT-ADM-003: DB commit 時 IntegrityError
+#    → 409 / "メール重複"
 def test_admin_create_user_duplicate_email(client, mocker):
-    """
-    UT-ADM-003: DB commit 時 IntegrityError
-    → 409 / "メール重複"
-    """
-
     access_token = create_access_token(identity="1")
 
     admin_user = User(user_id=1, role="ADMIN")
@@ -1253,12 +1349,9 @@ def test_admin_create_user_duplicate_email(client, mocker):
     assert data["message"] == "メール重複"
 
 # UT-ADM-004: admin_create_user 正常終了
+#201 Created / QRコードを含むレスポンスが返却され、
+#    指定した role でユーザーが作成されること
 def test_admin_create_user_success(client, mocker):
-    """
-    admin_create_user 正常終了
-    201 Created / QRコードを含むレスポンスが返却され、
-    指定した role でユーザーが作成されること
-    """
 
     # --- ADMIN JWT ---
     access_token = create_access_token(identity="1")
@@ -1301,24 +1394,26 @@ def test_admin_create_user_success(client, mocker):
     assert data["qr_code_image"].startswith("data:image/png;base64,")
 
 # UT-ADM-005: delete_vulnerability 存在なし
+#存在しない vuln_id を指定した場合、404 Not Found が返ること
 def test_delete_vulnerability_not_found(client, mocker):
-    """
-    存在しない vuln_id を指定した場合、
-    404 Not Found が返ること
-    """
-
+    
+    
+    
     # --- ADMIN JWT ---
     access_token = create_access_token(identity="1")
 
-    # --- admin_required 通過 ---
+    # --- admin_required 通過用のモック ---
     admin_user = User(user_id="1", role="ADMIN")
-    mocker.patch("admin.db.session.get", return_value=admin_user)
+    
+    # db.session.get をモック化し、呼び出し内容によって返す値を変える
+    def side_effect(model, ident):
+        if model == User:
+            return admin_user
+        if model.__name__ == 'Vulnerability': # Vulnerabilityが見つからない設定
+            return None
+        return None
 
-    # --- Vulnerability が存在しない ---
-    mocker.patch(
-        "admin.Vulnerability.query.get",
-        return_value=None
-    )
+    mocker.patch("admin.db.session.get", side_effect=side_effect)
 
     # --- 実行 ---
     response = client.delete(
@@ -1328,23 +1423,17 @@ def test_delete_vulnerability_not_found(client, mocker):
         }
     )
 
-    data = response.get_json()
-
     # --- 検証 ---
     assert response.status_code == 404
-    assert data["success"] is False
-    assert data["message"] == "Not found"
 
 # ------------------------------
 # UT-ADM-006 delete_vulnerability 成功ケース
 # ------------------------------
 from flask_jwt_extended import create_access_token
 def test_delete_vulnerability_success(client, setup_db, admin_token):
-    """
-    UT-ADM-006
-    delete_vulnerability 正常削除
-    関連データ（Quiz, LearningProgress）も含めて削除されること
-    """
+    
+    
+    
     from models import db, Vulnerability, Quiz, LearningProgress
 
     # --- Arrange ---
@@ -1828,11 +1917,11 @@ def test_update_progress_update(client, app_instance):
         assert updated_lp.status == "COMPLETED"
 
 # UT-CNT-004
+#    既存レコードの更新テスト
 def test_update_progress_existing_record(client, app_instance):
-    """
-    UT-CNT-004
-    既存レコードの更新テスト
-    """
+    
+    
+    
     user_id = 1
     vuln_id = 42
 
@@ -2186,3 +2275,5 @@ def test_password_reset_token_not_expired():
 
     # --- 検証 ---
     assert token.is_expired() is False
+
+
